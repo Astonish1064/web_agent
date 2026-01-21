@@ -1,0 +1,285 @@
+[
+  {
+    "step": 1,
+    "timestamp": 1768828186501,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "A",
+      "text": "Home",
+      "id": ""
+    }
+  },
+  {
+    "step": 2,
+    "timestamp": 1768828187565,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "A",
+      "text": "Product Detail",
+      "id": ""
+    }
+  },
+  {
+    "step": 3,
+    "timestamp": 1768828189087,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "A",
+      "text": "Checkout",
+      "id": ""
+    }
+  },
+  {
+    "step": 4,
+    "timestamp": 1768828189982,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "A",
+      "text": "Product Detail",
+      "id": ""
+    }
+  },
+  {
+    "step": 5,
+    "timestamp": 1768828191366,
+    "type": "FUNCTION_CALL",
+    "detail": {
+      "name": "addToCart",
+      "args": [
+        "1"
+      ]
+    }
+  },
+  {
+    "step": 6,
+    "timestamp": 1768828191366,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "BUTTON",
+      "text": "Add to Cart",
+      "id": ""
+    }
+  },
+  {
+    "step": 7,
+    "timestamp": 1768828192741,
+    "type": "FUNCTION_CALL",
+    "detail": {
+      "name": "addToCart",
+      "args": [
+        "1"
+      ]
+    }
+  },
+  {
+    "step": 8,
+    "timestamp": 1768828192741,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "BUTTON",
+      "text": "Add to Cart",
+      "id": ""
+    }
+  },
+  {
+    "step": 9,
+    "timestamp": 1768828194630,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "P",
+      "text": "Price: $29.99",
+      "id": ""
+    }
+  },
+  {
+    "step": 10,
+    "timestamp": 1768828195521,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "UL",
+      "text": "HomeProduct DetailCheckout",
+      "id": ""
+    }
+  },
+  {
+    "step": 11,
+    "timestamp": 1768828195847,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "A",
+      "text": "Checkout",
+      "id": ""
+    }
+  },
+  {
+    "step": 12,
+    "timestamp": 1768828573684,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "H1",
+      "text": "Checkout",
+      "id": ""
+    }
+  },
+  {
+    "step": 13,
+    "timestamp": 1768828839061,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "A",
+      "text": "Product Detail",
+      "id": ""
+    }
+  },
+  {
+    "step": 14,
+    "timestamp": 1768828840139,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "A",
+      "text": "Checkout",
+      "id": ""
+    }
+  },
+  {
+    "step": 15,
+    "timestamp": 1768828840889,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "A",
+      "text": "Home",
+      "id": ""
+    }
+  },
+  {
+    "step": 16,
+    "timestamp": 1768828841546,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "A",
+      "text": "Product Detail",
+      "id": ""
+    }
+  },
+  {
+    "step": 17,
+    "timestamp": 1768828841951,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "A",
+      "text": "Checkout",
+      "id": ""
+    }
+  },
+  {
+    "step": 18,
+    "timestamp": 1768828844311,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "H1",
+      "text": "Checkout",
+      "id": ""
+    }
+  },
+  {
+    "step": 19,
+    "timestamp": 1768828872789,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "DIV",
+      "text": "Python 101 - $29.99\n\nPython 101 - $29.99",
+      "id": "cart-summary"
+    }
+  },
+  {
+    "step": 20,
+    "timestamp": 1768828877859,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "A",
+      "text": "Product Detail",
+      "id": ""
+    }
+  },
+  {
+    "step": 21,
+    "timestamp": 1768828879666,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "A",
+      "text": "Home",
+      "id": ""
+    }
+  },
+  {
+    "step": 22,
+    "timestamp": 1768828880510,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "A",
+      "text": "Product Detail",
+      "id": ""
+    }
+  },
+  {
+    "step": 23,
+    "timestamp": 1768828881762,
+    "type": "FUNCTION_CALL",
+    "detail": {
+      "name": "addToCart",
+      "args": [
+        "1"
+      ]
+    }
+  },
+  {
+    "step": 24,
+    "timestamp": 1768828881762,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "BUTTON",
+      "text": "Add to Cart",
+      "id": ""
+    }
+  },
+  {
+    "step": 25,
+    "timestamp": 1768828883368,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "A",
+      "text": "Checkout",
+      "id": ""
+    }
+  },
+  {
+    "step": 26,
+    "timestamp": 1768828884699,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "A",
+      "text": "Product Detail",
+      "id": ""
+    }
+  },
+  {
+    "step": 27,
+    "timestamp": 1768828885505,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "A",
+      "text": "Home",
+      "id": ""
+    }
+  },
+  {
+    "step": 28,
+    "timestamp": 1768828886316,
+    "type": "DOM_CLICK",
+    "detail": {
+      "tagName": "BODY",
+      "text": "HomeProduct DetailCheckout\nWelcome to InfiniteWeb ",
+      "id": ""
+    }
+  }
+]

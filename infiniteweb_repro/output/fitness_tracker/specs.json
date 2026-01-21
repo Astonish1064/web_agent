@@ -1,0 +1,375 @@
+{
+  "seed": "fitness_tracker",
+  "tasks": [],
+  "interfaces": [],
+  "data_models": [],
+  "pages": [
+    {
+      "name": "Home",
+      "filename": "index.html",
+      "description": "Page: Home",
+      "required_interfaces": []
+    },
+    {
+      "name": "Workout List",
+      "filename": "workout-list.html",
+      "description": "Page: Workout List",
+      "required_interfaces": []
+    },
+    {
+      "name": "Workout Details",
+      "filename": "workout-detail.html",
+      "description": "Page: Workout Details",
+      "required_interfaces": []
+    },
+    {
+      "name": "Workout Form",
+      "filename": "work-form.html",
+      "description": "Page: Workout Form",
+      "required_interfaces": []
+    },
+    {
+      "name": "Exercise Browser",
+      "filename": "workout-detail.html",
+      "description": "Page: Exercise Browser",
+      "required_interfaces": []
+    },
+    {
+      "name": "Exercise Details",
+      "filename": "exercise-detail.html",
+      "description": "Page: Exercise Details",
+      "required_interfaces": []
+    },
+    {
+      "name": "Progress Overview",
+      "filename": "progress.html",
+      "description": "Page: Progress Overview",
+      "required_interfaces": []
+    },
+    {
+      "name": "Settings",
+      "filename": "settings.html",
+      "description": "Page: Settings",
+      "required_interfaces": []
+    }
+  ],
+  "task_instruction": "",
+  "architecture": {
+    "all_pages": [
+      {
+        "name": "Home",
+        "filename": "index.html"
+      },
+      {
+        "name": "Workout List",
+        "filename": "workout-list.html"
+      },
+      {
+        "name": "Workout Details",
+        "filename": "workout-detail.html"
+      },
+      {
+        "name": "Workout Form",
+        "filename": "work-form.html"
+      },
+      {
+        "name": "Exercise Browser",
+        "filename": "exercise-browser.html"
+      },
+      {
+        "name": "Exercise Details",
+        "filename": "exercise-detail.html"
+      },
+      {
+        "name": "Progress Overview",
+        "filename": "progress.html"
+      },
+      {
+        "name": "Settings",
+        "filename": "settings.html"
+      }
+    ],
+    "pages": [
+      {
+        "name": "Home",
+        "filename": "index.html",
+        "assigned_interfaces": [
+          "getCurrentWorkout",
+          "getRecentActivities",
+          "getFitnessStats"
+        ],
+        "incoming_params": [],
+        "outgoing_connections": [
+          {
+            "target": "workout-list.html",
+            "params": {},
+            "trigger": "View All Workouts link"
+          },
+          {
+            "target": "workout-detail.html",
+            "params": {
+              "id": "workoutId"
+            },
+            "trigger": "Current Workout link"
+          },
+          {
+            "target": "work-form.html",
+            "params": {
+              "mode": "create"
+            },
+            "trigger": "New Workout button"
+          },
+          {
+            "target": "progress.html",
+            "params": {},
+            "trigger": "Progress Stats link"
+          }
+        ],
+        "access_methods": [
+          "navigation"
+        ]
+      },
+      {
+        "name": "Workout List",
+        "filename": "workout-list.html",
+        "assigned_interfaces": [
+          "listWorkouts",
+          "searchWorkouts",
+          "filterWorkoutsByType"
+        ],
+        "incoming_params": [],
+        "outgoing_connections": [],
+        "access_methods": [
+          "navigation",
+          "url_param"
+        ]
+      },
+      {
+        "name": "Workout Details",
+        "filename": "workout-detail.html",
+        "assigned_interfaces": [
+          "getWorkoutDetails",
+          "updateWorkoutProgress",
+          "addExerciseToWorkout",
+          "removeExerciseFromWorkout",
+          "reorderExercises"
+        ],
+        "incoming_params": [
+          {
+            "name": "id",
+            "type": "string",
+            "description": "Workout ID"
+          }
+        ],
+        "outgoing_connections": [],
+        "access_methods": [
+          "url_param",
+          "direct_link"
+        ]
+      },
+      {
+        "name": "Workout Form",
+        "filename": "work-form.html",
+        "assigned_interfaces": [
+          "createWorkout",
+          "updateWorkout",
+          "deleteWorkout"
+        ],
+        "incoming_params": [
+          {
+            "name": "id",
+            "type": "string",
+            "description": "Workout ID (for edit mode)"
+          },
+          {
+            "name": "mode",
+            "type": "string",
+            "description": "create or edit"
+          }
+        ],
+        "outgoing_connections": [
+          {
+            "target": "workout-detail.html",
+            "params": {
+              "id": "newWorkoutId"
+            },
+            "trigger": "Form submission (create)"
+          },
+          {
+            "target": "workout-detail.html",
+            "params": {
+              "id": "workoutId"
+            },
+            "trigger": "Form submission (edit)"
+          },
+          {
+            "target": "workout-list.html",
+            "params": {},
+            "trigger": "Cancel button"
+          }
+        ],
+        "access_methods": [
+          "url_param",
+          "form_submission"
+        ]
+      },
+      {
+        "name": "Exercise Browser",
+        "filename": "workout-detail.html",
+        "assigned_interfaces": [
+          "browseExercises",
+          "searchExercises",
+          "filterExercisesByMuscleGroup",
+          "filterExercisesByEquipment"
+        ],
+        "incoming_params": [
+          {
+            "name": "workoutId",
+            "type": "string",
+            "description": "Workout ID to add exercise to"
+          }
+        ],
+        "outgoing_connections": [
+          {
+            "target": "exercise-detail.html",
+            "Params": {
+              "id": "exerciseId"
+            },
+            "trigger": "Exercise item click"
+          },
+          {
+            "target": "workout-detail.html",
+            "params": {
+              "id": "workoutId"
+            },
+            "trigger": "Back button"
+          },
+          {
+            "target": "workout-detail.html",
+            "params": {
+              "id": "workoutId"
+            },
+            "trigger": "Exercise added (via action)"
+          }
+        ],
+        "access_methods": [
+          "url_param"
+        ]
+      },
+      {
+        "name": "Exercise Details",
+        "filename": "exercise-detail.html",
+        "assigned_interfaces": [
+          "getExerciseDetails",
+          "saveExercise",
+          "removeExercise"
+        ],
+        "incoming_params": [
+          {
+            "name": "id",
+            "type": "string",
+            "escription": "Exercise ID"
+          }
+        ],
+        "outgoing_connections": [
+          {
+            "target": "workout-detail.html",
+            "params": {
+              "id": "workoutId"
+            },
+            "trigger": "Back button"
+          },
+          {
+            "target": "workout-detail.html",
+            "params": {
+              "id": "workoutId"
+            },
+            "trigger": "Add to Workout button"
+          }
+        ],
+        "access_methods": [
+          "url_param",
+          "direct_link"
+        ]
+      },
+      {
+        "name": "Progress Overview",
+        "filename": "progress.html",
+        "assigned_interfaces": [
+          "getProgressData",
+          "getProgressCharts",
+          "exportProgressData"
+        ],
+        "incoming_params": [],
+        "outgoing_connections": [
+          {
+            "target": "workout-detail.html",
+            "params": {
+              "id": "workoutId"
+            },
+            "trigger": "Workout history item click"
+          }
+        ],
+        "access_methods": [
+          "navigation"
+        ]
+      },
+      {
+        "name": "Settings",
+        "filename": "settings.html",
+        "assigned_interfaces": [
+          "updateUserProfile",
+          "updatePreferences",
+          "exportData",
+          "importData",
+          "resetData"
+        ],
+        "incoming_params": [],
+        "outgoing_connections": [],
+        "access_methods": [
+          "navigation"
+        ]
+      }
+    ],
+    "header_links": [
+      {
+        "text": "Home",
+        "url": "index.html"
+      },
+      {
+        "text": "Workouts",
+        "url": "workout-list.html"
+      },
+      {
+        "text": "Exercises",
+        "url": "exercise-browser.html"
+      },
+      {
+        "text": "Progress",
+        "url": "progress.html"
+      },
+      {
+        "text": "Settings",
+        "url": "settings.html"
+      }
+    ],
+    "footer_links": [
+      {
+        "text": "Home",
+        "url": "index.html"
+      },
+      {
+        "text": "Workouts",
+        "url": "workout-list.html"
+      },
+      {
+        "text": "Exercises",
+        "able": "exercise-browser.html"
+      },
+      {
+        "text": "Progress",
+        "url": "progress.html"
+      }
+    ]
+  }
+}

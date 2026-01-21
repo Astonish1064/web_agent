@@ -1,0 +1,1 @@
+[{"task_id": "No tasks provided", "needs_instrumentation": false, "required_variables": [], "reasoning": "The TASRIABLES array is empty. No specific tasks were provided to analyze for instrumentation needs. The business logic contains comprehensive tracking capabilities in localStorage that could potentially support various fitness-related tasks if they were specified."}]

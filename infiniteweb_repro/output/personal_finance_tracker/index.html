@@ -1,0 +1,83 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - personal_finance_tracker</title>
+    <!-- Explicitly load logic.js (Shared Logic) -->
+    <script src="logic.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        nav ul { list-style-type: none; padding: 0; }
+        nav ul li { display: inline; margin-right: 10px; }
+        #task-banner {
+            background-color: #ffeb3b; 
+            padding: 10px; 
+            border: 1px solid #fbc02d; 
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="task-banner">
+        Current Task: Track and analyze personal income and expenses to manage financial health.
+    </div>
+
+    <nav><ul><li><a href="index.html">Dashboard</a></li><li><a href="transactions.html">Transactions</a></li><li><a href="budget.html">Budget</a></li><li><a href="_reports.html">Reports</a></li><li><a href="categories.html">Categories</a></li></ul></nav>
+    <hr>
+    
+                <h1>Welcome to InfiniteWeb Bookstore</h1>
+                <div id="search-box">
+                    <input type="text" id="query" placeholder="Search for books...">
+                    <button onclick="performSearch()">Search</button>
+                </div>
+                <div id="results"></div>
+            
+
+    <script>
+        // Global Click Listener for Trajectory Recording
+        document.addEventListener('click', function(event) {
+            const target = event.target;
+            // Record minimal useful info
+            const info = {
+                tagName: target.tagName,
+                id: target.id,
+                innerText: target.innerText ? target.innerText.substring(0, 20) : ""
+            };
+            
+            // Only log if logTraj is available (from logic.js)
+            if (typeof logTraj === 'function') {
+                logTraj('DOM_CLICK', info);
+            }
+        });
+
+        // UI Binding Functions (Mocking the connection between UI and Logic)
+        function performSearch() {
+            const query = document.getElementById('query').value;
+            // Call shared logic
+            const results = window.searchBooks(query);
+            
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = "";
+            if (results.length === 0) {
+                resultsDiv.innerHTML = "<p>No results found.</p>";
+            } else {
+                results.forEach(book => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `<p><strong>${book.title}</strong> - $${book.price} <button onclick="addToCart('${book.id}')">Add to Cart</button></p>`;
+                    resultsDiv.appendChild(div);
+                });
+            }
+        }
+
+        function updateCartUI() {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            };
+            if (window.logTraj) {
+                window.logTraj('DOM_CLICK', logDetail);
+            }
+        });
+    </script>
+</body>
+</html>

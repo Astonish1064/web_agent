@@ -1,0 +1,76 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Registration - online_bookstore</title>
+    <!-- Explicitly load logic.js (Shared Logic) -->
+    <script src="logic.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        nav ul { list-style-type: none; padding: 0; }
+        nav ul li { display: inline; margin-right: 10px; }
+        #task-banner {
+            background-color: #ffeb3b; 
+            padding: 10px; 
+            border: 1px solid #fbc02d; 
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="task-banner">
+        Current Task: Browse, purchase, and manage your book collection and account on the online_bookstore website.
+    </div>
+
+    <nav><ul><li><a href="index.html">Home</a></li><li><a href="category.html">Product Category</a></li><li><a href="product-detail.html">Product Detail</a></li><li><a href="login.html">Login</a></li><li><a href="register.html">Registration</a></li><li><a href="account.html">Account Overview</a></li><li><a href="account-settings.html">Account Settings</a></li><li><a href="address-book.html">Address Book</a></li><li><a href="wishlist.html">Wishlist</a></li><li><a href="cart.html">Shopping Cart</a></li><li><a href="checkout.html">Checkout</a></li><li><a href="order-confirmation.html">Order Confirmation</a></li><li><a href="order-history.html">Order History</a></li><li><a href="order-detail.html">Order Detail</a></li><li><a href="return.html">Return Process</a></li><li><a href="help.html">Customer Service</a></li><li><a href="policy.html">Policy Display</a></li></ul></nav>
+    <hr>
+    
+
+    <script>
+        // Global Click Listener for Trajectory Recording
+        document.addEventListener('click', function(event) {
+            const target = event.target;
+            // Record minimal useful info
+            const info = {
+                tagName: target.tagName,
+                id: target.id,
+                innerText: target.innerText ? target.innerText.substring(0, 20) : ""
+            };
+            
+            // Only log if logTraj is available (from logic.js)
+            if (typeof logTraj === 'function') {
+                logTraj('DOM_CLICK', info);
+            }
+        });
+
+        // UI Binding Functions (Mocking the connection between UI and Logic)
+        function performSearch() {
+            const query = document.getElementById('query').value;
+            // Call shared logic
+            const results = window.searchBooks(query);
+            
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = "";
+            if (results.length === 0) {
+                resultsDiv.innerHTML = "<p>No results found.</p>";
+            } else {
+                results.forEach(book => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `<p><strong>${book.title}</strong> - $${book.price} <button onclick="addToCart('${book.id}')">Add to Cart</button></p>`;
+                    resultsDiv.appendChild(div);
+                });
+            }
+        }
+
+        function updateCartUI() {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            };
+            if (window.logTraj) {
+                window.logTraj('DOM_CLICK', logDetail);
+            }
+        });
+    </script>
+</body>
+</html>

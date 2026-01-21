@@ -1,0 +1,38 @@
+/2601.04126v2.pdf
+/train_deduped_filtered_167k_top20k_v6.parquet
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Output (generated websites)
+output/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

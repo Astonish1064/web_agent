@@ -1,0 +1,36 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Online Bookstore</title>
+            <style>
+                body { font-family: 'Roboto', sans-serif; color: #2c3e50; }
+                .btn { background: #2c3e50; color: white; padding: 10px; }
+            </style>
+        </head>
+        <body>
+            <header><h1>Bookstore</h1></header>
+            <main>
+                <div id="search-section">
+                    <input type="text" id="searchInput" placeholder="Search books...">
+                    <button onclick="app.doSearch()">Search</button>
+                    <div id="results"></div>
+                </div>
+            </main>
+            <script src="logic.js"></script>
+            <script>
+                const app = {
+                    doSearch: function() {
+                        const query = document.getElementById('searchInput').value;
+                        const results = window.logic.searchBooks(query);
+                        document.getElementById('results').innerHTML = results.map(b => 
+                            `<div>${b.title} - $${b.price} 
+                             <button onclick="window.logic.addToCart('${b.id}', 1)">Buy</button>
+                             </div>`
+                        ).join('');
+                    }
+                };
+            </script>
+        </body>
+        </html>
+        
