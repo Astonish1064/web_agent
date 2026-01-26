@@ -1,9 +1,10 @@
 import os
+import json
 from openai import OpenAI
 from .interfaces import ILLMProvider
 
 class CustomLLMProvider(ILLMProvider):
-    def __init__(self, base_url="http://10.166.75.190:8000/v1", api_key="EMPTY", model="/volume/pt-train/models/Qwen3-Coder-480B-A35B-Instruct"):
+    def __init__(self, base_url="https://siflow-auriga.siflow.cn/siflow/auriga/skyinfer/wzhang/glm47/v1", api_key="EMPTY", model="/volume/pt-train/models/GLM-4.7"):
         """
         Initializes the LLM provider pointing to a custom endpoint.
         Assumes an OpenAI-compatible API (e.g. vLLM, TGI).
@@ -14,14 +15,19 @@ class CustomLLMProvider(ILLMProvider):
         )
         self.model = model
 
-    def prompt(self, prompt_text: str) -> str:
+    def prompt(self, prompt_text: str, system_prompt: str = "") -> str:
         """
         Sends a completion request to the LLM.
         """
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt_text})
+
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
-                messages=[{"role": "user", "content": prompt_text}],
+                messages=messages,
                 temperature=0.7,
                 max_tokens=8192,
             )
@@ -30,21 +36,35 @@ class CustomLLMProvider(ILLMProvider):
             print(f"LLM Error: {e}")
             return ""
 
-    def prompt_json(self, prompt_text: str) -> str:
+    def prompt_json(self, prompt_text: str, system_prompt: str = "") -> dict:
         """
-        Requests JSON output (if supported by backend, or just via prompt engineering).
-        We force JSON mode in the API call if possible.
+        Requests JSON output.
         """
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt_text})
+
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
-                messages=[{"role": "user", "content": prompt_text}],
+                messages=messages,
                 temperature=0.2,
                 max_tokens=8192,
                 response_format={"type": "json_object"}
             )
-            return response.choices[0].message.content
+            content = response.choices[0].message.content
+            return json.loads(content)
         except Exception as e:
-             # Fallback to normal prompt if json_object not supported by backend
             print(f"LLM JSON Error (fallback to text): {e}")
-            return self.prompt(prompt_text)
+            text = self.prompt(prompt_text, system_prompt)
+            # Try to extract JSON from text if fallback occurred
+            try:
+                # Basic JSON extraction
+                start = text.find('{')
+                end = text.rfind('}') + 1
+                if start != -1 and end != 0:
+                    return json.loads(text[start:end])
+            except:
+                pass
+            return {}

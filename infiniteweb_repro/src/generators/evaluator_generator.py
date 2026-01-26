@@ -58,7 +58,7 @@ class LLMEvaluatorGenerator(IEvaluatorGenerator):
             task_id = ev.get("task_id")
             logic = ev.get("evaluation_logic", "return false;")
             js_code += f"    // Evaluator for {task_id}\n"
-            js_code += f"    try {{ {logic} }} catch(e) {{ console.error(e); }}\n"
+            js_code += f"    try {{ this.results['{task_id}'] = (() => {{ {logic} }})(); }} catch(e) {{ console.error(e); }}\n"
         
         js_code += "    return this.results;\n"
         js_code += "  }\n}\n"

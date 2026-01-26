@@ -21,7 +21,7 @@ from src.async_pipeline import AsyncWebGenPipeline
 
 async def main():
     topic = "online_bookstore"
-    output_dir = "output/bookstore_async"
+    output_dir = "output/deepseek_v3_test"
     
     print(f"🚀 Starting Async Generation for: {topic}")
     

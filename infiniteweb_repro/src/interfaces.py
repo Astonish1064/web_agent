@@ -191,5 +191,9 @@ class IEvaluatorGenerator(ABC):
 class ILLMProvider(ABC):
     """Abstract interface for LLM interactions."""
     @abstractmethod
-    def prompt(self, prompt_text: str) -> str:
+    def prompt(self, prompt_text: str, system_prompt: str = "") -> str:
+        pass
+
+    @abstractmethod
+    def prompt_json(self, prompt_text: str, system_prompt: str = "") -> dict:
         pass

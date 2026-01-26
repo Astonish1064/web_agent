@@ -343,28 +343,32 @@ PROMPT_HTML_GENERATION = """
 You are a senior web developer. Generate the main content HTML for a {website_type} website page with UI JavaScript.
 Page Information: {page_design_json}
 Navigation Information: {page_architecture_json}
-Framework HTML: {framework_html}
+Framework HTML Reference (DO NOT RE-GENERATE HEADER/FOOTER): {framework_html}
 Data Dictionary: {data_dict_json}
 Page-Specific SDK Interfaces: {page_interfaces_json}
 
-Requirements:
-1. Generate ONLY content for <main id="content"> section
-2. Call interfaces as WebsiteSDK.functionName() - they are SYNCHRONOUS
-3. Handle incoming_params: Extract URL parameters this page expects
-4. Implement outgoing_connections: Navigate to other pages with correct parameters
-5. Add data attributes: data-populate, data-action, data-component
+REQUIREMENTS:
+1. Generate the content that will go inside the <main id="content"> section.
+2. CRITICAL: Implement ALL "outgoing_connections" as visible UI elements (e.g., <button>, <a href="...">, or clickable cards). 
+3. If the architecture says this page connects to "add-task.html", you MUST provide a button or link to that page.
+4. Call interfaces as WebsiteSDK.functionName() - they are SYNCHRONOUS.
+5. Handle incoming_params: Extract URL parameters this page expects.
+6. Add data attributes: data-populate, data-action, data-component.
 
-UI JavaScript Requirements:
-1. Initialize page when DOM is ready
-2. Extract URL parameters for incoming_params
-3. Call SDK methods based on data-populate attributes
-4. Set up event listeners based on data-action attributes
-5. Implement navigation with correct parameters
-6. Always call WebsiteSDK.methodName() directly (no method extraction)
+UI JAVASCRIPT REQUIREMENTS:
+1. Initialize page when DOM is ready.
+2. Extract URL parameters for incoming_params.
+3. Implement navigation logic for outgoing_connections - use window.location.href for page transitions.
+4. Set up event listeners based on data-action attributes.
 
-CRITICAL: Call SDK interfaces with positional arguments only. Use only relative .html URLs for internal navigation.
+CRITICAL: 
+- Use only relative .html URLs for internal navigation.
+- Ensure the UI makes it obvious HOW a user can navigate to the next page in the flow.
+- Call ONLY the provided SDK interfaces from the "Page-Specific SDK Interfaces" list. 
+- DO NOT assume any getters, summaries, or other methods exist if they are not explicitly listed.
+- If a method you need (like a summary) is missing, simplify the UI or display placeholders rather than creating hypothetical calls.
 
-Return: {{"html_content": "Complete HTML page with UI JavaScript"}}
+Return: {{"html_content": "The HTML content for the main section, including UI scripts"}}
 """
 
 # Figure 24: CSS Page Generation
@@ -457,6 +461,9 @@ _getFromStorage(key) {{ /* retrieve data */ }}
 _saveToStorage(key, data) {{ /* persist data */ }}
 addToCart(productId, quantity) {{ /* implementation */ }}
 }}
+if (typeof window !== 'undefined') {{
+  window.WebsiteSDK = new BusinessLogic();
+}}
 module.exports = BusinessLogic;
 
 Return: {{"code": "javascript code here"}}
@@ -540,18 +547,30 @@ ANALYSIS REQUIREMENTS: For each task, determine:
 3. If NOT, what new instrumentation variables are needed?
 
 INSTRUMENTATION GUIDELINES:
-• Only add variables if existing localStorage is insufficient
-• Use naming convention: taskN_actionDescription (e.g., task1_searchCompleted)
-• Specify which function should set the variable and under what condition
-• Be conservative - only add instrumentation if truly necessary
+• Track ALL critical intermediate milestones, even if the final result is observable in localStorage.
+• Add variables to capture the USER'S ACTIONS and DECISION POINTS (e.g., filters applied, tabs switched, search performed).
+• Use naming convention: taskN_actionDescription (e.g., task1_sortPriceApplied, task2_detailViewed).
+• Aim for 2-4 instrumentation variables PER task to ensure high-fidelity trajectory tracking.
+• Specify which function should set the variable and under what condition.
 
 Return JSON:
 {{
-"requirements": [{{"task_id": "task_1",
-"needs_instrumentation": true,
-"required_variables": [{{"variable_name": "task1_searchCompleted",
-"set_in_function": "searchNeighborhoods",
-"set_condition": "After successful search"}}]}}]
+"requirements": [{{
+  "task_id": "task_1",
+  "needs_instrumentation": true,
+  "required_variables": [
+    {{
+      "variable_name": "task1_sortApplied",
+      "set_in_function": "getPurchaseOrders",
+      "set_condition": "When sortBy is totalValue_desc"
+    }},
+    {{
+      "variable_name": "task1_approved",
+      "set_in_function": "approvePurchaseOrder",
+      "set_condition": "After successful approval"
+    }}
+  ]
+}}]
 }}
 """
 
@@ -563,15 +582,20 @@ INSTRUMENTATION SPECIFICATIONS: {instrumentation_specs_json}
 
 INSTRUCTIONS: For each instrumentation variable:
 1. Find the specified function in the code
-2. Add localStorage.setItem() call at the appropriate location based on set_condition
-3. Wrap instrumentation code in try-catch to ensure non-invasive behavior
+2. Add code to set both localStorage AND window.__instrumentation based on set_condition
+3. Use the following pattern:
+   try {{
+     localStorage.setItem('VARIABLE_NAME', 'VALUE');
+     window.__instrumentation = window.__instrumentation || {{}};
+     window.__instrumentation['VARIABLE_NAME'] = 'VALUE';
+   }} catch(e) {{}}
 4. Use the exact variable_name and value_to_set from specifications
 
 CRITICAL REQUIREMENTS:
 • DO NOT change any original functionality
 • DO NOT modify function signatures or return values
 • Instrumentation code must be wrapped in try-catch
-• Only add localStorage.setItem() calls as specified
+• REQUIRED: Update window.__instrumentation for Agent visibility
 • Preserve all existing code structure and comments
 • Place instrumentation BEFORE the return statement
 
@@ -605,5 +629,29 @@ Return JSON:
 "evaluators": [{{"task_id": "task_1", "name": "...",
 "localStorage_variables": ["var1", "var2"],
 "evaluation_logic": "// JavaScript returning boolean"}}]
+}}
+"""
+
+PROMPT_VISUAL_VALIDATION = """
+You are a Senior UI/UX QA Engineer. Your task is to evaluate a generated web page based on a screenshot and the original requirement.
+
+### Input:
+- **Seed/Topic**: {seed}
+- **Page Name**: {page_name}
+- **Page Description**: {page_description}
+
+### Evaluation Criteria:
+1. **Visual Richness**: Does it look like a real website or just a bare skeleton? Is there consistent styling?
+2. **Component Presence**: Are the expected components (e.g., header, forms, calculation results, buttons) visible and correctly placed?
+3. **Layout Integrity**: Are there any obvious layout breaks, overlapping elements, or off-screen content?
+4. **Professionalism**: Does the design feel premium or amateurish?
+
+### Response Format:
+Return a JSON object:
+{{
+    "score": 0-10,
+    "pass": boolean,
+    "feedback": "Detailed feedback describing visual issues or praise",
+    "visual_bugs": ["bug 1", "bug 2"]
 }}
 """

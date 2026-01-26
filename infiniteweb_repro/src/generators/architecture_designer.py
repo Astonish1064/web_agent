@@ -74,9 +74,8 @@ class LLMArchitectDesigner(IArchitectDesigner):
     
     def _parse_response(self, response: str) -> Architecture:
         """Parse LLM response into Architecture."""
-        try:
-            data = json.loads(response)
-        except (json.JSONDecodeError, TypeError):
+        data = clean_json_response(response)
+        if not data:
             return Architecture()
         
         pages = []
