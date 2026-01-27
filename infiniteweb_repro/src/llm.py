@@ -30,6 +30,7 @@ class CustomLLMProvider(ILLMProvider):
                 messages=messages,
                 temperature=0.7,
                 max_tokens=8192,
+                timeout=300,
             )
             return response.choices[0].message.content
         except Exception as e:

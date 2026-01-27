@@ -50,6 +50,7 @@ def clean_json_response(response: str):
 def clean_code_response(response: str) -> str:
     """
     Extracts code from a markdown block if present.
+    More robustly handles edge cases like unclosed fences or multiple blocks.
     """
     if not response:
         return ""
@@ -61,9 +62,15 @@ def clean_code_response(response: str) -> str:
     pattern = r"```(?:\w+)?\s*([\s\S]*?)\s*```"
     match = re.search(pattern, text)
     if match:
-        return match.group(1).strip()
+        text = match.group(1).strip()
+    
+    # Aggressively remove any leftover leading/trailing fences (e.g. if the model only output one)
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:\w+)?\n?", "", text)
+    if text.endswith("```"):
+        text = re.sub(r"n?```$", "", text)
             
-    return text
+    return text.strip()
 
 import random # Added for jitter
 

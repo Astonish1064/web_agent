@@ -1,0 +1,59 @@
+[
+  {
+    "id": "task_1",
+    "name": "Filtered Product Search and Cart Addition",
+    "description": "Find a specific pair of headphones within a price range and rating, then add them to the cart.",
+    "steps": [
+      "Navigate to the homepage",
+      "Click on the search input field in the header",
+      "Type 'Sony wireless headphones' into the search field",
+      "Click the search button or press Enter",
+      "Locate the filter sidebar and set the maximum price to '$150'",
+      "Select the '4 Stars & Up' checkbox under the Customer Reviews filter",
+      "Click on the product image of the first item in the filtered results",
+      "Click the 'Add to Cart' button on the product details page"
+    ]
+  },
+  {
+    "id": "task_2",
+    "name": "Specification Comparison and Selection",
+    "description": "Compare two laptops and select the one with the better RAM specification.",
+    "steps": [
+      "Navigate to the 'Laptops' category via the main navigation menu",
+      "Apply the 'Gaming' filter checkbox in the category sidebar",
+      "Click the 'Compare' checkbox on the first product in the list",
+      "Click the 'Compare' checkbox on the second product in the list",
+      "Click the 'Compare Selected' button in the sticky footer or header",
+      "Review the 'RAM' column in the comparison table for both items",
+      "Click the 'Add to Cart' button corresponding to the laptop with 16GB RAM or higher"
+    ]
+  },
+  {
+    "id": "task_3",
+    "name": "Multi-item Cart and Promo Code Application",
+    "description": "Add two specific office supply items to the cart and apply a valid discount code.",
+    "steps": [
+      "Search for 'Ergonomic mouse' using the top search bar",
+      "Click the 'Add to Cart' button for the first search result",
+      "Search for 'Mechanical keyboard' using the top search bar",
+      "Filter the keyboard results by 'Blue' switch type",
+      "Click the 'Add to Cart' button for the first filtered keyboard result",
+      "Click the shopping cart icon in the top right corner",
+      "Type 'SAVE20' into the 'Promo Code' input field in the cart summary",
+      "Click the 'Apply' button next to the promo code field"
+    ]
+  },
+  {
+    "id": "task_4",
+    "name": "Product Variant Selection and Wishlist",
+    "description": "Navigate to a specific product, select custom variants, and add to wishlist.",
+    "steps": [
+      "Navigate to the 'Smartwatches' section from the main menu",
+      "Sort the product list by 'Price: High to Low' using the dropdown",
+      "Click on the product name of the second item in the grid",
+      "Select 'Silver' from the 'Color' dropdown menu on the product page",
+      "Select '44mm' from the 'Size' variant options",
+      "Click the 'Add to Wishlist' heart icon located near the price"
+    ]
+  }
+]

@@ -6,23 +6,36 @@ import json
 class Task:
     """Represents a generated user task (e.g., 'Buy a book')."""
     id: str
+    name: str
     description: str
-    complexity: int
-    required_steps: List[str]
+    steps: List[str]
+
+    @staticmethod
+    def from_dict(d):
+        return Task(**d)
 
 @dataclass
 class InterfaceDef:
     """Represents a Unified Interface signature."""
     name: str
-    parameters: Dict[str, str]  # name -> type
-    return_type: str
     description: str
+    parameters: List[Dict]
+    returns: Dict
+    related_tasks: List[str] = field(default_factory=list)
+
+    @staticmethod
+    def from_dict(d):
+        return InterfaceDef(**d)
 
 @dataclass
 class DataModel:
     """Represents an entity in the system (e.g., Product)."""
     name: str
     attributes: Dict[str, str]  # name -> type
+
+    @staticmethod
+    def from_dict(d):
+        return DataModel(**d)
 
 @dataclass
 class VariableRequirement:
@@ -31,6 +44,10 @@ class VariableRequirement:
     set_in_function: str
     set_condition: str
 
+    @staticmethod
+    def from_dict(d):
+        return VariableRequirement(**d)
+
 @dataclass
 class InstrumentationSpec:
     """
@@ -38,6 +55,12 @@ class InstrumentationSpec:
     Defines where and what to instrument in the backend code.
     """
     requirements: List[VariableRequirement] = field(default_factory=list)
+    
+    @staticmethod
+    def from_dict(d):
+        return InstrumentationSpec(
+            requirements=[VariableRequirement.from_dict(r) for r in d.get('requirements', [])]
+        )
 
 @dataclass
 class PageSpec:
@@ -46,6 +69,10 @@ class PageSpec:
     filename: str # e.g. "index.html", "product.html"
     description: str
     required_interfaces: List[str] = field(default_factory=list) # IDs of interfaces this page uses
+
+    @staticmethod
+    def from_dict(d):
+        return PageSpec(**d)
 
 @dataclass
 class WebsiteSpec:
@@ -64,6 +91,27 @@ class WebsiteSpec:
     def to_json(self) -> str:
         return json.dumps(self, default=lambda o: o.__dict__, indent=2)
 
+    @staticmethod
+    def from_dict(d):
+        return WebsiteSpec(
+            seed=d.get('seed', ''),
+            tasks=[Task.from_dict(t) for t in d.get('tasks', [])],
+            interfaces=[InterfaceDef.from_dict(i) for i in d.get('interfaces', [])],
+            data_models=[DataModel.from_dict(m) for m in d.get('data_models', [])],
+            pages=[PageSpec.from_dict(p) for p in d.get('pages', [])],
+            task_instruction=d.get('task_instruction', '')
+        )
+
+@dataclass
+class Framework:
+    """Shared UI framework."""
+    html: str
+    css: str
+
+    @staticmethod
+    def from_dict(d):
+        return Framework(**d)
+
 @dataclass
 class GenerationContext:
     """
@@ -77,3 +125,6 @@ class GenerationContext:
     frontend_code: Optional[str] = None # index.html
     evaluator_code: Optional[str] = None # evaluator.js
     output_dir: str = ""
+    generated_pages: Dict[str, str] = field(default_factory=dict) # filename -> content
+    data: Optional[Dict] = None # Generated data as a dictionary
+    framework: Optional[Framework] = None

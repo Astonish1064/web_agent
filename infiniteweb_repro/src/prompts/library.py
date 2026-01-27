@@ -451,6 +451,11 @@ REQUIREMENTS:
 5. Must work in both browser and Node.js environments
 6. All data must be JSON serializable for localStorage
 7. Implement interfaces with positional arguments only
+8. CRITICAL: If you are not returning a JSON object, return ONLY raw JavaScript code. DO NOT wrap it in markdown block fences like ```javascript.
+
+Return JSON format:
+{{"code": "Complete business_logic.js code string"}}
+OR return ONLY the raw JavaScript code directly without any formatting.
 
 STRUCTURE:
 const localStorage = (function() {{ ... }})(); // polyfill
@@ -469,31 +474,121 @@ module.exports = BusinessLogic;
 Return: {{"code": "javascript code here"}}
 """
 
-# Figure 27: Backend Test Generation
-PROMPT_BACKEND_TEST = """
-You are an expert test engineer. Generate flow-based integration tests for the business logic.
+# Figure 26b: Backend Logic Fix (Regeneration)
+PROMPT_BACKEND_FIX = """
+You are an expert JavaScript developer. Fix the business logic code based on the provided test errors.
+Website Seed: {website_seed}
+Tasks: {tasks_json}
+Current Code:
+```javascript
+{original_code}
+```
+Test Errors:
+{error_log}
+
+REQUIREMENTS:
+1. Analyze the test errors to correctly identify the bugs in the logic.
+2. Fix the bugs in the code.
+3. MAINTAIN the existing structure and class names.
+4. DO NOT change function signatures unless necessary to fix the bug.
+5. **CRITICAL**: If the error is `ReferenceError: localStorage is not defined`, you must add a polyfill at the top of the file:
+   `if (typeof localStorage === "undefined") {{ global.localStorage = {{ getItem: () => null, setItem: () => {{}}, clear: () => {{}}, removeItem: () => {{}} }}; }}`
+6. Return ONLY the fixed code.
+
+Return JSON format:
+{{"code": "Complete fixed business_logic.js code string"}}
+OR return ONLY the raw JavaScript code directly.
+"""
+
+# Figure 26c: Backend Tests Fix (Regeneration)
+PROMPT_TESTS_FIX = """
+You are an expert QA Automation Engineer. Fix the test code based on the provided errors.
+Website Seed: {website_seed}
+Tasks: {tasks_json}
+Current Test Code:
+```javascript
+{original_tests}
+```
+Test Errors:
+{error_log}
+
+REQUIREMENTS:
+1. Analyze the errors to identify bugs in the TEST CODE (not the business logic).
+2. **Polyfill localStorage**: Since tests run in Node.js, you MUST add this polyfill at the top of the test file:
+   `if (typeof localStorage === "undefined") {{ global.localStorage = {{ getItem: () => null, setItem: () => {{}}, clear: () => {{}}, removeItem: () => {{}} }}; }}`
+3. **JSDOM Setup**: Ensure JSDOM is initialized with `url: "http://localhost/"` to enable localStorage within the JSDOM window:
+   `const dom = new JSDOM(html, {{ runScripts: "dangerously", url: "http://localhost/" }});`
+4. MAINTAIN the existing test structure and assertions.
+5. Return ONLY the fixed test code.
+
+Return JSON format:
+{{"code": "Complete fixed backend_tests.js code string"}}
+OR return ONLY the raw JavaScript code directly.
+"""
+
+# Figure 27: Full-Stack System & Backend Test Generation
+PROMPT_SYSTEM_TEST = """
+You are an expert QA Automation Engineer specializing in both Backend Logic and Frontend Accessibility (A11y).
+Generate a robust test suite that performs **System Testing (E2E)** and **Integration Testing**.
+
+### Inputs
 Website Seed: {website_seed}
 Tasks: {tasks_json}
 Interfaces: {interfaces_json}
 Generated Data: {generated_data_json}
+# [新增] 必须提供HTML内容，否则无法测试UI
+HTML Context: {html_files_json} 
+# [新增] 提供Logic代码，以便测试代码进行准确的集成测试
+Logic Code (logic.js):
+```javascript
+{logic_code}
+```
 
-CRITICAL REQUIREMENTS:
-1. Use Generated Data ONLY in setupTestData() for initial localStorage population
-2. NEVER hardcode expected return values - always extract from actual API responses
-3. Chain API calls properly: Call API, capture response, extract needed values for next calls
-4. Test complete user flows, not individual functions
-5. Focus on happy path (successful scenarios)
-6. Must run in Node.js environment
-7. Test ALL tasks provided
+### Environment Setup
+1. The environment is **Node.js**.
+2. You must use **JSDOM** to simulate the browser environment for System Tests.
+3. You must use the provided `logic.js` for Backend Tests.
 
-CORRECT Flow Testing Example:
-const addResult = this.logic.addToCart(userId, productId, 2);
-const actualCartId = addResult.cartId; // Extract from response
-const cartData = this.logic.getCart(actualCartId); // Use actual ID
-this.assert(cartData.total > 0, 'Total should be positive');
+### CRITICAL REQUIREMENTS
+
+#### Part 1: Backend Integration (Business Logic)
+1. Use Generated Data ONLY in setupTestData() for initial localStorage population.
+2. Chain API calls properly (e.g., create -> get ID -> approve).
+3. **Assertion Rule:** Verify data persistence (e.g., "Status changed to 'Approved' in DB").
+
+#### Part 2: System Testing (UI & Interaction) -- [核心新增部分]
+1. **Simulate User Flows via DOM:** For each Task, load the relevant HTML file into JSDOM.
+2. **Selector Validation:** precise selectors that a human or Agent would use (e.g., text content, IDs).
+3. **Agent-Friendliness Check (CRITICAL):** - If a clickable element is NOT a `<button>` or `<a>`, assert that it has `role="button"` and `tabindex="0"`. 
+   - **FAIL the test** if key interaction elements are semantically invisible to Agents.
+4. **Event Simulation:** Manually trigger events (`click`, `change`) on DOM elements and verify they call the underlying logic functions.
+
+#### General Rules
+1. NEVER hardcode expected return values - always extract from actual responses.
+2. Test ALL tasks provided in `tasks.json`.
+3. Focus on the "Happy Path" but ensuring the UI allows it.
+
+### CORRECT System Test Example (JSDOM):
+```javascript
+// Setup JSDOM
+const dom = new JSDOM(htmlContent, {{ runScripts: "dangerously" }});
+const document = dom.window.document;
+
+// 1. Locate Element
+const btn = document.querySelector('.btn-primary');
+// 2. Validate Accessibility (The step that would have saved your Agent)
+if (btn.tagName !== 'BUTTON' && btn.tagName !== 'A') {{
+    assert(btn.getAttribute('role') === 'button', 'Clickable div must have role="button" for Agents');
+}}
+// 3. Simulate Interaction
+btn.click();
+// 4. Verify Side Effect
+assert(localStorage.getItem('form_submitted') === 'true', 'UI click did not trigger logic');
+```
 
 Return: {{"code": "javascript test code"}}
 """
+
 
 # =============================================================================
 # 8. EVALUATOR GENERATION

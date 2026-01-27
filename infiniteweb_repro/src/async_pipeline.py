@@ -2,8 +2,9 @@
 import asyncio
 import os
 import json
-from .domain import GenerationContext, WebsiteSpec, PageSpec
+from .domain import GenerationContext, WebsiteSpec, PageSpec, Task, InterfaceDef, DataModel, Framework
 from .generators.task_generator import TaskConfig
+from .generators.architecture_designer import Architecture
 from .agent.environments.env_validator import EnvironmentHealthChecker
 
 class AsyncWebGenPipeline:
@@ -34,35 +35,144 @@ class AsyncWebGenPipeline:
         self.semaphore = asyncio.Semaphore(max_concurrency)
 
     async def run(self, topic: str, output_dir: str):
-        """Executes the full generation pipeline asynchronously."""
+        """Executes the full generation pipeline asynchronously with resume support."""
         abs_output_dir = os.path.abspath(output_dir)
         os.makedirs(abs_output_dir, exist_ok=True)
+        self.intermediates_dir = os.path.join(abs_output_dir, "intermediates")
+        os.makedirs(self.intermediates_dir, exist_ok=True)
+        
         context = GenerationContext(seed=topic, output_dir=abs_output_dir)
         context.spec = WebsiteSpec(seed=topic)
         
-        # Create intermediates directory
-        self.intermediates_dir = os.path.join(abs_output_dir, "intermediates")
-        os.makedirs(self.intermediates_dir, exist_ok=True)
-
-        # Parallel Step 1: Planning Chain + Design Analysis
-        planning_task = asyncio.create_task(self._run_planning_phase(topic, context))
-        design_task = asyncio.create_task(self._run_design_analysis(topic))
+        # Resume state if intermediates exist
+        design_analysis = self._resume_context(context)
+        
+        # Parallel Step 1: Planning Chain + Design Analysis (Skip if done)
+        planning_needed = not context.spec.tasks or not context.spec.interfaces or not context.spec.pages
+        if planning_needed:
+            planning_task = asyncio.create_task(self._run_planning_phase(topic, context))
+        else:
+            print("⏭️ [DEBUG] Skipping planning phase (already completed)")
+            planning_task = asyncio.create_task(asyncio.sleep(0))
+            
+        if design_analysis is None:
+            design_task = asyncio.create_task(self._run_design_analysis(topic))
+        else:
+            print("⏭️ [DEBUG] Skipping design analysis (already completed)")
+            design_task = asyncio.create_task(asyncio.sleep(0))
         
         await planning_task
-        design_analysis = await design_task
+        if design_analysis is None:
+            design_analysis = await design_task
         
-        # Parallel Step 2: Backend Branch + Frontend Branch (Framework)
-        # Note: Frontend Branch will also spawn page generation later, but Framework is the first step.
-        backend_task = asyncio.create_task(self._run_backend_branch(context))
-        frontend_task = asyncio.create_task(self._run_frontend_branch(context, design_analysis))
+        # Parallel Step 2: Backend Logic Generation + Frontend Branch
+        # Note: We generate the initial logic in parallel with frontend, 
+        # but validation (which needs HTML) happens after.
         
-        await asyncio.gather(backend_task, frontend_task)
+        # Skip backend if logic and data are already there
+        backend_logic_needed = not context.backend_code or not context.data
+        if backend_logic_needed:
+            backend_logic_task = asyncio.create_task(self._run_backend_logic_generation(context))
+        else:
+            print("⏭️ [DEBUG] Skipping backend logic generation (already completed)")
+            backend_logic_task = asyncio.create_task(asyncio.sleep(0))
+            
+        # Frontend logic check (simplified: if we have more than 0 generated pages, we skip framework/pages)
+        # Note: In a real scenario, we might want to check IF all pages are there.
+        # But for now, if context.generated_pages is populated, we skip.
+        frontend_needed = not context.generated_pages
+        if frontend_needed:
+            frontend_task = asyncio.create_task(self._run_frontend_branch(context, design_analysis))
+        else:
+            print(f"⏭️ [DEBUG] Skipping frontend branch ({len(context.generated_pages)} pages found)")
+            frontend_task = asyncio.create_task(asyncio.sleep(0))
+        
+        await asyncio.gather(backend_logic_task, frontend_task)
+        
+        # Step 3: System Validation with Retries (Logic + UI interaction)
+        await self._run_system_validation_loop(context)
         
         # Phase 4: Multimodal Validation (Visual + State)
         print("🔍 [DEBUG] Starting multimodal validation...")
         await self._run_multimodal_validation(context)
         
         return context
+
+    def _load_intermediate_json(self, filename):
+        """Loads intermediate JSON if it exists."""
+        path = os.path.join(self.intermediates_dir, filename)
+        if os.path.exists(path):
+            with open(path, "r") as f:
+                return json.load(f)
+        return None
+
+    def _resume_context(self, context: GenerationContext):
+        """Reconstructs context from intermediate files."""
+        print("🔄 [DEBUG] Checking for existing intermediate results to resume...")
+        
+        # 1. Tasks
+        data = self._load_intermediate_json("1_tasks.json")
+        if data:
+            context.spec.tasks = [Task.from_dict(t) for t in data]
+            print(f"   ✓ Loaded {len(context.spec.tasks)} tasks")
+            
+        # 3. Interfaces
+        data = self._load_intermediate_json("3_interfaces.json")
+        if data:
+            context.spec.interfaces = [InterfaceDef.from_dict(i) for i in data]
+            print(f"   ✓ Loaded {len(context.spec.interfaces)} interfaces")
+            
+        # 4. Final Architecture
+        data = self._load_intermediate_json("4_final_architecture.json")
+        if data:
+            context.spec.architecture = Architecture.from_dict(data)
+            context.spec.pages = [PageSpec(name=getattr(p, 'name', ''), 
+                                         filename=getattr(p, 'filename', ''),
+                                         description=f"Page: {getattr(p, 'name', '')}")
+                                 for p in context.spec.architecture.pages]
+            print(f"   ✓ Loaded architecture with {len(context.spec.pages)} pages")
+            
+        # 5. Design Analysis
+        design_analysis = self._load_intermediate_json("5_design_analysis.json")
+        if design_analysis:
+            print("   ✓ Loaded design analysis")
+            
+        # 6. Data
+        data = self._load_intermediate_json("6_generated_data.json")
+        if data:
+            context.data = data
+            print("   ✓ Loaded generated data")
+            
+        # Logic and Evaluator (from final files)
+        logic_path = os.path.join(context.output_dir, "logic.js")
+        if os.path.exists(logic_path):
+            with open(logic_path, "r") as f:
+                context.backend_code = f.read()
+            print("   ✓ Loaded logic.js")
+            
+        eval_path = os.path.join(context.output_dir, "evaluator.js")
+        if os.path.exists(eval_path):
+            with open(eval_path, "r") as f:
+                context.evaluator_code = f.read()
+            print("   ✓ Loaded evaluator.js")
+            
+        # Framework
+        data = self._load_intermediate_json("10_framework.json")
+        if data:
+            context.framework = Framework.from_dict(data)
+            print("   ✓ Loaded framework")
+            
+        # Generated Pages
+        if context.spec.pages:
+            for page in context.spec.pages:
+                page_path = os.path.join(context.output_dir, page.filename)
+                if os.path.exists(page_path):
+                    with open(page_path, "r") as f:
+                        context.generated_pages[page.filename] = f.read()
+            if context.generated_pages:
+                print(f"   ✓ Loaded {len(context.generated_pages)} HTML pages")
+                
+        return design_analysis
 
     async def _run_throttled(self, func, *args, **kwargs):
         async with self.semaphore:
@@ -133,74 +243,116 @@ class AsyncWebGenPipeline:
         self._save_intermediate("5_design_analysis.json", analysis)
         return analysis
 
-    async def _run_backend_branch(self, context: GenerationContext):
-        """Runs Data -> Logic -> Instr -> Inject in sequence with validation & retries."""
+    async def _run_backend_logic_generation(self, context: GenerationContext):
+        """Generates initial business logic without validation."""
         # 2.1 Data
         print("💾 [DEBUG] Starting data generation...")
         context.data = await self._run_throttled(self.data_gen.generate, context.spec)
-        print("💾 [DEBUG] Data generation finished.")
         self._save_intermediate("6_generated_data.json", context.data)
         
+        # 2.2 Backend Logic
+        print("⚙️ [DEBUG] Generating initial backend logic...")
+        raw_logic = await self._run_throttled(self.backend_gen.generate_logic, context.spec)
+        self._save_intermediate("7_initial_raw_logic.js", raw_logic)
+        
+        # Process and inject (initial)
+        await self._process_backend_logic(context, raw_logic)
+
+    async def _process_backend_logic(self, context, raw_logic):
+        """Standard processing for logic: Instr Analysis -> Injection -> Evaluator Gen."""
+        # 2.3 Instrumentation Analysis
+        instr_reqs = await self._run_throttled(self.instr_gen.analyze, context.spec, raw_logic)
+        self._save_intermediate("8_instrumentation_requirements.json", instr_reqs)
+        
+        # 2.4 Injection
+        context.backend_code = await self._run_throttled(self.instr_gen.inject, raw_logic, instr_reqs)
+        
+        # 2.5 Evaluator Generation
+        context.evaluator_code = await self._run_throttled(
+            self.evaluator_gen.generate, context.spec, instr_reqs, context.backend_code
+        )
+        
+        # Write files
+        logic_path = os.path.join(context.output_dir, "logic.js")
+        eval_path = os.path.join(context.output_dir, "evaluator.js")
+        with open(logic_path, "w") as f:
+            f.write(context.backend_code)
+        with open(eval_path, "w") as f:
+            f.write(context.evaluator_code)
+
+    async def _run_system_validation_loop(self, context: GenerationContext):
+        """Runs the System Validation loop (Logic + UI) with retries."""
         validator = EnvironmentHealthChecker()
         max_retries = 3
         last_error = None
         
+        # 1. Initial Test Generation
+        test_path = os.path.join(context.output_dir, "backend_tests.js")
+        needs_test_regeneration = not os.path.exists(test_path)
+        
         for attempt in range(max_retries):
-            print(f"⚙️ [DEBUG] Backend generation attempt {attempt + 1}/{max_retries}")
+            print(f"🧪 [DEBUG] System Validation attempt {attempt + 1}/{max_retries}")
             
-            # 2.2 Backend Logic
-            raw_logic = await self._run_throttled(self.backend_gen.generate_logic, context.spec)
-            self._save_intermediate(f"7_raw_logic_attempt_{attempt+1}.js", raw_logic)
+            if needs_test_regeneration:
+                print("🧪 [DEBUG] Generating full-stack system tests...")
+                test_code = await self._run_throttled(
+                    self.backend_gen.generate_tests, 
+                    context.spec, 
+                    context.backend_code, 
+                    context.data,
+                    html_files=context.generated_pages
+                )
+                with open(test_path, "w") as f:
+                    f.write(test_code)
+                needs_test_regeneration = False
             
-            # 2.2.1 Backend Tests (TCTDD)
-            print("🧪 [DEBUG] Generating backend integration tests...")
-            # Note: generate_tests might need raw_logic and data
-            test_code = await self._run_throttled(self.backend_gen.generate_tests, context.spec, raw_logic, context.data)
-            
-            # 2.3 Instrumentation Analysis
-            print("🔍 [DEBUG] Starting instrumentation analysis...")
-            instr_reqs = await self._run_throttled(self.instr_gen.analyze, context.spec, raw_logic)
-            self._save_intermediate("8_instrumentation_requirements.json", instr_reqs)
-            
-            # 2.4 Injection
-            print("💉 [DEBUG] Starting instrumentation injection...")
-            context.backend_code = await self._run_throttled(self.instr_gen.inject, raw_logic, instr_reqs)
-            
-            # 2.5 Evaluator Generation
-            print("🧪 [DEBUG] Starting evaluator generation...")
-            context.evaluator_code = await self._run_throttled(
-                self.evaluator_gen.generate, context.spec, instr_reqs, context.backend_code
-            )
-            self._save_intermediate("9_evaluator_uninstrumented.js", context.evaluator_code)
-# This is a bit confusing in the original code, but let's save what we have.
-
-            # Temporary write for validation
-            logic_path = os.path.join(context.output_dir, "logic.js")
-            test_path = os.path.join(context.output_dir, "backend_tests.js")
-            eval_path = os.path.join(context.output_dir, "evaluator.js")
-            
-            with open(logic_path, "w") as f:
-                f.write(context.backend_code)
-            with open(test_path, "w") as f:
-                f.write(test_code)
-            with open(eval_path, "w") as f:
-                f.write(context.evaluator_code)
-                
-            # 2.6 Validation
-            print("🧐 [DEBUG] Validating backend logic...")
+            # 2. Validation
+            print("🧐 [DEBUG] Validating system integrity (JSDOM + Logic)...")
             success, error = await validator.validate_backend(context.output_dir)
             
             if success:
-                print("✅ [DEBUG] Backend validation passed!")
+                print("✅ [DEBUG] System validation passed!")
                 break
             else:
                 last_error = error
-                print(f"❌ [DEBUG] Backend validation failed: {error}")
-                # Optional: Pass last_error back to generate_logic for self-correction
+                print(f"❌ [DEBUG] System validation failed: {error}")
+                if attempt < max_retries - 1:
+                    # Detect error source: backend_tests.js or logic.js
+                    is_test_error = "backend_tests.js" in error and (
+                        "localStorage is not defined" in error or
+                        "SyntaxError" in error or
+                        "ReferenceError" in error
+                    )
+                    
+                    if is_test_error:
+                        print("🔄 [DEBUG] Error in tests. Attempting to fix backend_tests.js...")
+                        # Read current tests
+                        with open(test_path, "r") as f:
+                            current_tests = f.read()
+                        # Fix tests
+                        fixed_tests = await self._run_throttled(
+                            self.backend_gen.fix_tests,
+                            context.spec,
+                            current_tests,
+                            error
+                        )
+                        with open(test_path, "w") as f:
+                            f.write(fixed_tests)
+                        # No need to regenerate tests from prompt since we just fixed them
+                    else:
+                        print("🔄 [DEBUG] Error in logic. Attempting to fix logic.js...")
+                        # Fix logic
+                        raw_logic = await self._run_throttled(
+                            self.backend_gen.fix_logic, 
+                            context.spec, 
+                            context.backend_code,
+                            error
+                        )
+                        await self._process_backend_logic(context, raw_logic)
+                        # Since logic changed, we MUST regenerate tests to be sure
+                        needs_test_regeneration = True
         else:
-            print(f"⚠️ [DEBUG] Backend failed after {max_retries} attempts. Last error: {last_error}")
-            
-        print("✅ [DEBUG] Backend branch complete.")
+            print(f"⚠️ [DEBUG] System validation failed after {max_retries} attempts.")
 
     async def _run_multimodal_validation(self, context: GenerationContext):
         """ Performs UI screenshot capture and VLM-based visual + state analysis. """
@@ -273,8 +425,9 @@ class AsyncWebGenPipeline:
         print(f"📑 [DEBUG] Starting page generation for: {page.filename}")
         
         # 1. Functionality
+        page_arch = arch_pages_map.get(page.filename, None)
         page_design = await self._run_throttled(
-            self.page_designer.design_functionality, page, context.spec
+            self.page_designer.design_functionality, page, context.spec, navigation_info=getattr(page_arch, '__dict__', {}) if page_arch else {}
         )
         print(f"   ✓ Functionality designed for {page.filename}")
         self._save_intermediate(f"page_{page.filename}_1_design.json", page_design)
@@ -288,7 +441,7 @@ class AsyncWebGenPipeline:
         self._save_intermediate(f"page_{page.filename}_2_layout.json", layout)
         
         # 3. HTML
-        page_arch = arch_pages_map.get(page.filename, None)
+        # page_arch already retrieved above
         if not page_arch:
              # Fallback if not found in architecture
              page_arch = getattr(context.spec.architecture, 'pages', [None])[0]
@@ -317,17 +470,29 @@ class AsyncWebGenPipeline:
             framework_html = context.framework.html
             framework_css = context.framework.css or ""
             
-            # Inject content into the first match of <main id="content"> or <body>
-            if '<main id="content">' in framework_html:
-                full_html = framework_html.replace('<main id="content">', f'<main id="content">{html}')
-            else:
-                full_html = framework_html.replace('<body>', f'<body>{html}')
-                
             # Combine CSS
-            full_html = f"<style>{framework_css}\n{css}</style>\n{full_html}\n<script src='logic.js'></script>"
+            script_tag = "<script src='logic.js'></script>"
+            if '</head>' in framework_html:
+                full_html = framework_html.replace('</head>', f'<style>{framework_css}\n{css}</style>\n{script_tag}\n</head>')
+            else:
+                full_html = f"<style>{framework_css}\n{css}</style>\n{script_tag}\n{full_html}"
+                
+            # Inject content into the first match of <main id="content"> or <body>
+            # Using simple replacement but looking for the start of the tag block
+            if 'id="content"' in full_html:
+                # Find the closing '>' of the main tag containing id="content"
+                try:
+                    main_start = full_html.find('id="content"')
+                    tag_end = full_html.find('>', main_start)
+                    full_html = full_html[:tag_end+1] + html + full_html[tag_end+1:]
+                except:
+                    full_html = full_html.replace('id="content"', f'id="content">{html}')
+            else:
+                full_html = full_html.replace('<body>', f'<body>{html}')
         else:
-            full_html = f"<!DOCTYPE html><html><head><style>{css}</style></head><body>{html}<script src='logic.js'></script></body></html>"
+            full_html = f"<!DOCTYPE html><html><head><style>{css}</style><script src='logic.js'></script></head><body>{html}</body></html>"
 
         with open(os.path.join(context.output_dir, page.filename), "w") as f:
             f.write(full_html)
+        context.generated_pages[page.filename] = full_html
         print(f"   ✓ Written {page.filename} ({len(full_html)} bytes)")

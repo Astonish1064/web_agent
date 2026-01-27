@@ -1,0 +1,237 @@
+{
+  "all_pages": [
+    {
+      "name": "Home",
+      "filename": "index.html"
+    },
+    {
+      "name": "Search Results",
+      "filename": "search.html"
+    },
+    {
+      "name": "Product Details",
+      "filename": "product.html"
+    },
+    {
+      "name": "Compare Products",
+      "filename": "compare.html"
+    },
+    {
+      "name": "Cart",
+      "filename": "cart.html"
+    },
+    {
+      "name": "Wishlist",
+      "filename": "wishlist.html"
+    }
+  ],
+  "pages": [
+    {
+      "name": "Home",
+      "filename": "index.html",
+      "assigned_interfaces": [
+        "getFeaturedProducts",
+        "getCategories"
+      ],
+      "incoming_params": [],
+      "outgoing_connections": [
+        {
+          "target": "search.html",
+          "params": {
+            "category": "categoryId"
+          }
+        }
+      ],
+      "access_methods": [
+        {
+          "type": "navigation"
+        }
+      ]
+    },
+    {
+      "name": "Search Results",
+      "filename": "search.html",
+      "assigned_interfaces": [
+        "searchProducts",
+        "filterByPrice",
+        "filterByRating",
+        "addToCompare"
+      ],
+      "incoming_params": [
+        "query",
+        "category",
+        "minPrice",
+        "maxPrice",
+        "minRating"
+      ],
+      "outgoing_connections": [
+        {
+          "target": "product.html",
+          "params": {
+            "id": "productId"
+          }
+        },
+        {
+          "target": "compare.html",
+          "params": {
+            "ids": "commaSeparatedProductIds"
+          }
+        }
+      ],
+      "access_methods": [
+        {
+          "type": "navigation"
+        },
+        {
+          "type": "form_submission"
+        }
+      ]
+    },
+    {
+      "name": "Product Details",
+      "filename": "product.html",
+      "assigned_interfaces": [
+        "getProductDetails",
+        "getProductVariants",
+        "addToCart",
+        "addToWishlist"
+      ],
+      "incoming_params": [
+        "id"
+      ],
+      "outgoing_connections": [
+        {
+          "target": "cart.html",
+          "params": {}
+        },
+        {
+          "target": "wishlist.html",
+          "params": {}
+        }
+      ],
+      "access_methods": [
+        {
+          "type": "url_param"
+        },
+        {
+          "type": "direct_link"
+        }
+      ]
+    },
+    {
+      "name": "Compare Products",
+      "filename": "compare.html",
+      "assigned_interfaces": [
+        "compareProducts",
+        "getProductSpecs"
+      ],
+      "incoming_params": [
+        "ids"
+      ],
+      "outgoing_connections": [
+        {
+          "target": "product.html",
+          "params": {
+            "id": "selectedProductId"
+          }
+        },
+        {
+          "target": "cart.html",
+          "params": {
+            "id": "selectedProductId"
+          }
+        }
+      ],
+      "access_methods": [
+        {
+          "type": "url_param"
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "filename": "cart.html",
+      "assigned_interfaces": [
+        "getCartItems",
+        "applyDiscountCode",
+        "updateQuantity",
+        "removeFromCart"
+      ],
+      "incoming_params": [],
+      "outgoing_connections": [
+        {
+          "target": "product.html",
+          "params": {
+            "id": "productId"
+          }
+        }
+      ],
+      "access_methods": [
+        {
+          "type": "navigation"
+        },
+        {
+          "type": "direct_link"
+        }
+      ]
+    },
+    {
+      "name": "Wishlist",
+      "filename": "wishlist.html",
+      "assigned_interfaces": [
+        "getWishlistItems",
+        "moveToCart",
+        "removeFromWishlist"
+      ],
+      "incoming_params": [],
+      "outgoing_connections": [
+        {
+          "target": "product.html",
+          "params": {
+            "id": "productId"
+          }
+        }
+      ],
+      "access_methods": [
+        {
+          "type": "navigation"
+        },
+        {
+          "type": "direct_link"
+        }
+      ]
+    }
+  ],
+  "header_links": [
+    {
+      "text": "Home",
+      "url": "index.html"
+    },
+    {
+      "text": "Search",
+      "url": "search.html"
+    },
+    {
+      "text": "Wishlist",
+      "url": "wishlist.html"
+    },
+    {
+      "text": "Cart",
+      "url": "cart.html"
+    }
+  ],
+  "footer_links": [
+    {
+      "text": "Home",
+      "url": "index.html"
+    },
+    {
+      "text": "Search",
+      "url": "search.html"
+    },
+    {
+      "text": "Terms of Service",
+      "url": "terms.html"
+    }
+  ]
+}

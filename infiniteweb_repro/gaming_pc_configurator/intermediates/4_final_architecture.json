@@ -1,0 +1,233 @@
+{
+  "all_pages": [
+    {
+      "name": "Home",
+      "filename": "index.html"
+    },
+    {
+      "name": "Search Results",
+      "filename": "search.html"
+    },
+    {
+      "name": "Product Details",
+      "filename": "product.html"
+    },
+    {
+      "name": "Compare Products",
+      "filename": "compare.html"
+    },
+    {
+      "name": "Cart",
+      "filename": "cart.html"
+    },
+    {
+      "name": "Wishlist",
+      "filename": "wishlist.html"
+    }
+  ],
+  "pages": [
+    {
+      "name": "Home",
+      "filename": "index.html",
+      "assigned_interfaces": [
+        "getFeaturedProducts",
+        "getCategories",
+        "searchProducts"
+      ],
+      "incoming_params": [],
+      "outgoing_connections": [
+        {
+          "target": "search.html",
+          "params": {
+            "query": "searchTerm",
+            "minPrice": "minPrice",
+            "maxPrice": "maxPrice",
+            "rating": "minRating"
+          }
+        },
+        {
+          "target": "product.html",
+          "params": {
+            "id": "productId"
+          }
+        }
+      ],
+      "access_methods": [
+        {
+          "type": "navigation"
+        }
+      ]
+    },
+    {
+      "name": "Search Results",
+      "filename": "search.html",
+      "assigned_interfaces": [
+        "searchProducts"
+      ],
+      "incoming_params": [
+        "query",
+        "minPrice",
+        "maxPrice",
+        "rating"
+      ],
+      "outgoing_connections": [
+        {
+          "target": "product.html",
+          "params": {
+            "id": "productId"
+          }
+        },
+        {
+          "target": "compare.html",
+          "params": {
+            "ids": "productIds"
+          }
+        }
+      ],
+      "access_methods": [
+        {
+          "type": "url_param"
+        },
+        {
+          "type": "navigation"
+        }
+      ]
+    },
+    {
+      "name": "Product Details",
+      "filename": "product.html",
+      "assigned_interfaces": [
+        "getProductDetails",
+        "addToCart",
+        "addToWishlist",
+        "addToCompare"
+      ],
+      "incoming_params": [
+        "id"
+      ],
+      "outgoing_connections": [
+        {
+          "target": "cart.html",
+          "params": {}
+        },
+        {
+          "target": "wishlist.html",
+          "params": {}
+        },
+        {
+          "target": "compare.html",
+          "params": {
+            "ids": "productIds"
+          }
+        },
+        {
+          "target": "search.html",
+          "params": {
+            "query": "categoryName"
+          }
+        }
+      ],
+      "access_methods": [
+        {
+          "type": "url_param"
+        },
+        {
+          "type": "direct_link"
+        }
+      ]
+    },
+    {
+      "name": "Compare Products",
+      "filename": "compare.html",
+      "assigned_interfaces": [
+        "getProductComparison"
+      ],
+      "incoming_params": [
+        "ids"
+      ],
+      "outgoing_connections": [
+        {
+          "target": "product.html",
+          "params": {
+            "id": "selectedProductId"
+          }
+        }
+      ],
+      "access_methods": [
+        {
+          "type": "url_param"
+        },
+        {
+          "type": "direct_link"
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "filename": "cart.html",
+      "assigned_interfaces": [
+        "getCart",
+        "applyDiscountCode"
+      ],
+      "incoming_params": [],
+      "outgoing_connections": [
+        {
+          "target": "product.html",
+          "params": {
+            "id": "productId"
+          }
+        }
+      ],
+      "access_methods": [
+        {
+          "type": "navigation"
+        }
+      ]
+    },
+    {
+      "name": "Wishlist",
+      "filename": "wishlist.html",
+      "assigned_interfaces": [
+        "getWishlist"
+      ],
+      "incoming_params": [],
+      "outgoing_connections": [
+        {
+          "target": "product.html",
+          "params": {
+            "id": "productId"
+          }
+        }
+      ],
+      "access_methods": [
+        {
+          "type": "navigation"
+        }
+      ]
+    }
+  ],
+  "header_links": [
+    {
+      "text": "Home",
+      "url": "index.html"
+    },
+    {
+      "text": "Cart",
+      "url": "cart.html"
+    },
+    {
+      "text": "Wishlist",
+      "url": "wishlist.html"
+    }
+  ],
+  "footer_links": [
+    {
+      "text": "Home",
+      "url": "index.html"
+    },
+    {
+      "text": "Shop All",
+      "url": "search.html"
+    }
+  ]
+}

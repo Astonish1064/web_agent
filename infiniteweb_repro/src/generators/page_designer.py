@@ -55,7 +55,7 @@ class LLMPageDesigner(IPageDesigner):
     def __init__(self, llm: ILLMProvider):
         self.llm = llm
     
-    def design_functionality(self, page_spec, spec) -> PageDesign:
+    def design_functionality(self, page_spec, spec, navigation_info=None) -> PageDesign:
         """Design page functionality and components."""
         page_spec_json = json.dumps({
             "name": getattr(page_spec, 'name', ''),
@@ -75,7 +75,7 @@ class LLMPageDesigner(IPageDesigner):
             page_spec_json=page_spec_json,
             data_dict_json=data_dict_json,
             interface_details_json=interface_details,
-            navigation_info="{}"
+            navigation_info=json.dumps(navigation_info) if navigation_info else "{}"
         )
         
         response = self.llm.prompt(prompt)

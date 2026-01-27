@@ -13,9 +13,14 @@ logger = logging.getLogger("agent.validator")
 class EnvironmentHealthChecker:
     """ Validates the quality and functionality of generated web environments. """
 
-    def _get_node_binary(self) -> str:
-        """ Finds a usable node binary. """
-        # Try system path first
+    def _get_node_binary(self, output_dir: str) -> str:
+        """ Finds a usable node binary, prioritizing local project env. """
+        # Try local project nodeenv first
+        local_node = os.path.join(os.getcwd(), "venv_node/bin/node")
+        if os.path.exists(local_node):
+            return local_node
+
+        # Try system path
         try:
             subprocess.run(["node", "-v"], capture_output=True, check=True)
             return "node"
@@ -27,7 +32,7 @@ class EnvironmentHealthChecker:
         if os.path.exists(playwright_node):
             return playwright_node
             
-        return "node" # Fallback to default and hope for the best
+        return "node" # Fallback
 
     async def validate_backend(self, output_dir: str) -> Tuple[bool, Optional[str]]:
         """ Executes logic.js tests using Node.js. """
@@ -39,13 +44,34 @@ class EnvironmentHealthChecker:
 
         try:
             # Run node in a subprocess
-            node_bin = self._get_node_binary()
+            node_bin = self._get_node_binary(output_dir)
             abs_test_path = os.path.abspath(test_path)
+            
+            # Use mocha from local node_modules
+            mocha_bin = os.path.join(os.getcwd(), "node_modules", ".bin", "mocha")
+            if not os.path.exists(mocha_bin):
+                 # Fallback to globally installed mocha or try to run with node if mocha missing (though it will fail for describe/it)
+                 # But we assume we installed it. If not, let's try wrapping it.
+                 # Actually, we can just run node_modules/mocha/bin/mocha
+                 mocha_bin = os.path.join(os.getcwd(), "node_modules", "mocha", "bin", "mocha")
+
+            # Add local node_modules to NODE_PATH
+            env = os.environ.copy()
+            local_node_modules = os.path.join(os.getcwd(), "node_modules")
+            if "NODE_PATH" in env:
+                env["NODE_PATH"] = f"{local_node_modules}:{env['NODE_PATH']}"
+            else:
+                env["NODE_PATH"] = local_node_modules
+            
+            # Use node to run mocha executable to ensure we use the right node version
             process = await asyncio.create_subprocess_exec(
-                node_bin, abs_test_path,
+                node_bin, mocha_bin, abs_test_path,
+                "--reporter", "spec",
+                "--timeout", "10000", # Increase timeout
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                cwd=output_dir
+                cwd=output_dir,
+                env=env
             )
             stdout, stderr = await process.communicate()
 

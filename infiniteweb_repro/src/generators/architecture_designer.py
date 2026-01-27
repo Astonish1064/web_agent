@@ -22,6 +22,10 @@ class PageArchitecture:
     outgoing_connections: List[Dict] = field(default_factory=list)
     access_methods: List[Dict] = field(default_factory=list)
 
+    @staticmethod
+    def from_dict(d):
+        return PageArchitecture(**d)
+
 
 @dataclass
 class Architecture:
@@ -30,6 +34,15 @@ class Architecture:
     pages: List[PageArchitecture] = field(default_factory=list)
     header_links: List[Dict] = field(default_factory=list)
     footer_links: List[Dict] = field(default_factory=list)
+
+    @staticmethod
+    def from_dict(d):
+        return Architecture(
+            all_pages=d.get('all_pages', []),
+            pages=[PageArchitecture.from_dict(p) for p in d.get('pages', [])],
+            header_links=d.get('header_links', []),
+            footer_links=d.get('footer_links', [])
+        )
 
 
 class LLMArchitectDesigner(IArchitectDesigner):

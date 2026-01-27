@@ -1,0 +1,90 @@
+{
+  "visual_features": {
+    "overall_style": "Modern minimalist with clean tech aesthetic",
+    "visual_hierarchy": "High-contrast hero section leading into value proposition cards, concluding with a distinct call-to-action footer",
+    "whitespace": "Generous vertical padding (80px-120px) to create a premium, breathable feel; clear separation between content sections"
+  },
+  "color_scheme": {
+    "primary": [
+      "#2563EB",
+      "#1D4ED8"
+    ],
+    "secondary": [
+      "#F8FAFC",
+      "#F1F5F9"
+    ],
+    "accent": [
+      "#06B6D4",
+      "#8B5CF6"
+    ],
+    "neutral": {
+      "background": "#FFFFFF",
+      "text_main": "#0F172A",
+      "text_muted": "#64748B",
+      "border": "#E2E8F0"
+    }
+  },
+  "layout_characteristics": {
+    "grid_system": "12-column CSS Grid with Flexbox alignment",
+    "layout_patterns": "Centered container (max-width: 1200px), full-width background color breaks, stacked vertical sections",
+    "alignment": "Center-aligned typography for hero, left-aligned for feature details, symmetrical grid for card layouts"
+  },
+  "ui_patterns": [
+    {
+      "pattern_type": "button_primary",
+      "characteristics": {
+        "shape": "rounded-full",
+        "fill": "solid_gradient",
+        "shadow": "soft_drop"
+      }
+    },
+    {
+      "pattern_type": "card",
+      "characteristics": {
+        "background": "white",
+        "border": "1px solid #E2E8F0",
+        "radius": "16px",
+        "padding": "32px"
+      }
+    },
+    {
+      "pattern_type": "navigation",
+      "characteristics": {
+        "position": "sticky_top",
+        "style": "floating_glassmorphism"
+      }
+    }
+  ],
+  "typography": {
+    "font_families": {
+      "heading": "Inter",
+      "body": "Inter"
+    },
+    "size_hierarchy": {
+      "h1": "3.75rem",
+      "h2": "2.5rem",
+      "h3": "1.5rem",
+      "body": "1rem"
+    },
+    "weights": {
+      "heading": "700",
+      "subheading": "600",
+      "body": "400"
+    },
+    "line_height": {
+      "heading": "1.1",
+      "body": "1.6"
+    }
+  },
+  "spacing_system": {
+    "base_unit": "8px",
+    "padding": {
+      "section_vertical": "96px",
+      "component_internal": "24px"
+    },
+    "margin": {
+      "element_spacing": "16px",
+      "section_spacing": "120px"
+    }
+  }
+}

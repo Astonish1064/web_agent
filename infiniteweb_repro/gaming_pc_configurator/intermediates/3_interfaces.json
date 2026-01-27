@@ -1,0 +1,441 @@
+[
+  {
+    "name": "searchProducts",
+    "description": "Searches for products based on query, category, price range, and rating. Used for finding specific items.",
+    "parameters": [
+      {
+        "name": "query",
+        "type": "string",
+        "description": "Search term (e.g., 'headphones', 'laptop')"
+      },
+      {
+        "name": "category",
+        "type": "string",
+        "description": "Filter by product category",
+        "required": false
+      },
+      {
+        "name": "minPrice",
+        "type": "number",
+        "description": "Minimum price filter",
+        "required": false
+      },
+      {
+        "name": "maxPrice",
+        "type": "number",
+        "description": "Maximum price filter",
+        "required": false
+      },
+      {
+        "name": "minRating",
+        "type": "number",
+        "description": "Minimum customer rating (1-5)",
+        "required": false
+      }
+    ],
+    "returns": {
+      "type": "object",
+      "properties": {
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "price": {
+                "type": "number"
+              },
+              "rating": {
+                "type": "number"
+              },
+              "imageUrl": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "totalResults": {
+          "type": "number"
+        }
+      }
+    },
+    "related_tasks": [
+      "task_1",
+      "task_2",
+      "task_3"
+    ]
+  },
+  {
+    "name": "getProductDetails",
+    "description": "Retrieves detailed information for a specific product, including available variants for customization.",
+    "parameters": [
+      {
+        "name": "productId",
+        "type": "string"
+      }
+    ],
+    "returns": {
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "price": {
+          "type": "number"
+        },
+        "rating": {
+          "type": "number"
+        },
+        "specifications": {
+          "type": "object"
+        },
+        "variants": {
+          "type": "array",
+          "description": "List of selectable options (e.g., color, size)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "variantId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "priceAdjustment": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "stockStatus": {
+          "type": "string"
+        }
+      }
+    },
+    "related_tasks": [
+      "task_2",
+      "task_4"
+    ]
+  },
+  {
+    "name": "addToCompare",
+    "description": "Adds a product to the comparison list. Handles list creation if needed.",
+    "parameters": [
+      {
+        "name": "productId",
+        "type": "string"
+      }
+    ],
+    "returns": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "compareCount": {
+          "type": "number"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "related_tasks": [
+      "task_2"
+    ]
+  },
+  {
+    "name": "getProductComparison",
+    "description": "Retrieves a side-by-side comparison of products currently in the comparison list, highlighting specs like RAM.",
+    "parameters": [],
+    "returns": {
+      "type": "object",
+      "properties": {
+        "products": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "price": {
+                "type": "number"
+              },
+              "specifications": {
+                "type": "object",
+                "properties": {
+                  "ram": {
+                    "type": "string"
+                  },
+                  "processor": {
+                    "type": "string"
+                  },
+                  "storage": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "related_tasks": [
+      "task_2"
+    ]
+  },
+  {
+    "name": "addToCart",
+    "description": "Adds a specific product (with optional variant) to the user's cart. Creates cart if it doesn't exist.",
+    "parameters": [
+      {
+        "name": "productId",
+        "type": "string"
+      },
+      {
+        "name": "variantId",
+        "type": "string",
+        "required": false,
+        "description": "Required if the product has selectable variants"
+      },
+      {
+        "name": "quantity",
+        "type": "number",
+        "required": false,
+        "default": 1
+      }
+    ],
+    "returns": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "cartItemCount": {
+          "type": "number"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "related_tasks": [
+      "task_1",
+      "task_3"
+    ]
+  },
+  {
+    "name": "applyDiscountCode",
+    "description": "Applies a promotional code to the current cart.",
+    "parameters": [
+      {
+        "name": "code",
+        "type": "string"
+      }
+    ],
+    "returns": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "discountAmount": {
+          "type": "number"
+        },
+        "newTotal": {
+          "type": "number"
+        }
+      }
+    },
+    "related_tasks": [
+      "task_3"
+    ]
+  },
+  {
+    "name": "addToWishlist",
+    "description": "Adds a specific product variant to the user's wishlist.",
+    "parameters": [
+      {
+        "name": "productId",
+        "type": "string"
+      },
+      {
+        "name": "variantId",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "returns": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "wishlistCount": {
+          "type": "number"
+        }
+      }
+    },
+    "related_tasks": [
+      "task_4"
+    ]
+  },
+  {
+    "name": "getCart",
+    "description": "Retrieves the current state of the shopping cart for display and validation.",
+    "parameters": [],
+    "returns": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "variantName": {
+                "type": "string"
+              },
+              "quantity": {
+                "type": "number"
+              },
+              "unitPrice": {
+                "type": "number"
+              },
+              "totalPrice": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "subtotal": {
+          "type": "number"
+        },
+        "discount": {
+          "type": "number"
+        },
+        "total": {
+          "type": "number"
+        },
+        "appliedCode": {
+          "type": "string"
+        }
+      }
+    },
+    "related_tasks": [
+      "task_1",
+      "task_3"
+    ]
+  },
+  {
+    "name": "getWishlist",
+    "description": "Retrieves all items saved in the user's wishlist.",
+    "parameters": [],
+    "returns": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "imageUrl": {
+                "type": "string"
+              },
+              "price": {
+                "type": "number"
+              },
+              "inStock": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "related_tasks": [
+      "task_4"
+    ]
+  },
+  {
+    "name": "getFeaturedProducts",
+    "description": "Retrieves a list of featured products for the Home page.",
+    "parameters": [],
+    "returns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "related_tasks": []
+  },
+  {
+    "name": "getCategories",
+    "description": "Retrieves top-level product categories for navigation.",
+    "parameters": [],
+    "returns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "related_tasks": []
+  }
+]

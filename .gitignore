@@ -15,6 +15,8 @@ build/
 venv/
 .venv/
 env/
+infiniteweb_repro/node_modules/
+infiniteweb_repro/venv_node/
 
 # IDE
 .idea/

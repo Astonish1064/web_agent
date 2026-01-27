@@ -4,18 +4,11 @@ LLMFrontendGenerator - Phase 4 Implementation
 Generates HTML and CSS using official prompts.
 """
 import json
-from dataclasses import dataclass
-
+from ..domain import Framework
 from ..interfaces import IFrontendGenerator, ILLMProvider
 from ..prompts.library import PROMPT_FRAMEWORK_GENERATION, PROMPT_HTML_GENERATION, PROMPT_CSS_GENERATION
 from ..utils import clean_json_response
 
-
-@dataclass
-class Framework:
-    """Shared UI framework."""
-    html: str
-    css: str
 
 
 class LLMFrontendGenerator(IFrontendGenerator):
