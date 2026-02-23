@@ -23,7 +23,10 @@ async def main():
         use_instrumentation = sys.argv[2].lower() == "true"
     
     # 1. Setup components
-    llm = CustomLLMProvider() # Uses current model in src/llm.py
+    llm = CustomLLMProvider(
+        base_url="https://siflow-auriga.siflow.cn/siflow/auriga/skyinfer/wzhang/glm47-tool-fork/v1",
+        model="glm-4"
+    ) 
     env = PlaywrightEnvironment(headless=True)
     agent = LLMWebAgent(llm, use_instrumentation=use_instrumentation)
     runner = AgentRunner(env, agent, output_dir=os.path.join(output_dir, "agent_runs"))
@@ -34,16 +37,13 @@ async def main():
         import json
         with open(tasks_path, "r") as f:
             tasks_data = json.load(f)
-            # Convert to Task objects
-            tasks = [Task(id=t.get("id", f"task_{i}"), 
-                          description=t.get("description", t.get("name", "")), 
-                          complexity=t.get("complexity", 1), 
-                          required_steps=t.get("steps", [])) 
-                     for i, t in enumerate(tasks_data)]
+            # Convert to Task objects using from_dict
+            tasks = [Task.from_dict(t) for t in tasks_data]
     else:
         logger.warning("No tasks.json found. Using a default task.")
-        tasks = [Task(id="task_0", description="Look at the homepage and tell me what the site is about.", 
-                     complexity=1, required_steps=["Navigate to home"])]
+        tasks = [Task(id="task_0", name="Explore Homepage", 
+                     description="Look at the homepage and tell me what the site is about.", 
+                     steps=["Navigate to home"])]
 
     # 3. Run Agent
     try:

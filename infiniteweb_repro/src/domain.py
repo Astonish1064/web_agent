@@ -14,6 +14,14 @@ class Task:
     def from_dict(d):
         return Task(**d)
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "steps": self.steps
+        }
+
 @dataclass
 class InterfaceDef:
     """Represents a Unified Interface signature."""
@@ -26,6 +34,9 @@ class InterfaceDef:
     @staticmethod
     def from_dict(d):
         return InterfaceDef(**d)
+    
+    def to_dict(self):
+        return self.__dict__
 
 @dataclass
 class DataModel:
@@ -36,6 +47,9 @@ class DataModel:
     @staticmethod
     def from_dict(d):
         return DataModel(**d)
+    
+    def to_dict(self):
+        return self.__dict__
 
 @dataclass
 class VariableRequirement:
@@ -47,6 +61,9 @@ class VariableRequirement:
     @staticmethod
     def from_dict(d):
         return VariableRequirement(**d)
+    
+    def to_dict(self):
+        return self.__dict__
 
 @dataclass
 class InstrumentationSpec:
@@ -61,6 +78,9 @@ class InstrumentationSpec:
         return InstrumentationSpec(
             requirements=[VariableRequirement.from_dict(r) for r in d.get('requirements', [])]
         )
+    
+    def to_dict(self):
+        return {"requirements": [r.to_dict() for r in self.requirements]}
 
 @dataclass
 class PageSpec:
@@ -72,7 +92,14 @@ class PageSpec:
 
     @staticmethod
     def from_dict(d):
-        return PageSpec(**d)
+        valid_keys = {"name", "filename", "description", "required_interfaces"}
+        filtered = {k: v for k, v in d.items() if k in valid_keys}
+        if "description" not in filtered:
+            filtered["description"] = ""
+        return PageSpec(**filtered)
+    
+    def to_dict(self):
+        return self.__dict__
 
 @dataclass
 class WebsiteSpec:
@@ -89,7 +116,7 @@ class WebsiteSpec:
 
 
     def to_json(self) -> str:
-        return json.dumps(self, default=lambda o: o.__dict__, indent=2)
+        return json.dumps(self.to_dict(), indent=2)
 
     @staticmethod
     def from_dict(d):
@@ -102,6 +129,16 @@ class WebsiteSpec:
             task_instruction=d.get('task_instruction', '')
         )
 
+    def to_dict(self) -> Dict:
+        return {
+            "seed": self.seed,
+            "tasks": [t.to_dict() for t in self.tasks],
+            "interfaces": [i.to_dict() for i in self.interfaces],
+            "data_models": [m.to_dict() for m in self.data_models],
+            "pages": [p.to_dict() for p in self.pages],
+            "task_instruction": self.task_instruction
+        }
+
 @dataclass
 class Framework:
     """Shared UI framework."""
@@ -111,6 +148,9 @@ class Framework:
     @staticmethod
     def from_dict(d):
         return Framework(**d)
+    
+    def to_dict(self):
+        return self.__dict__
 
 @dataclass
 class GenerationContext:
@@ -126,5 +166,6 @@ class GenerationContext:
     evaluator_code: Optional[str] = None # evaluator.js
     output_dir: str = ""
     generated_pages: Dict[str, str] = field(default_factory=dict) # filename -> content
+    task_plans: Dict[str, str] = field(default_factory=dict) # task_id -> markdown_plan
     data: Optional[Dict] = None # Generated data as a dictionary
     framework: Optional[Framework] = None

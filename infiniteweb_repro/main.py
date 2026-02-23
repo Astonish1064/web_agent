@@ -5,7 +5,7 @@ import os
 # Ensure src is in path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from src.pipeline import WebGenPipeline
+from src.pipeline.web_gen_pipeline import WebGenPipeline
 from src.llm import CustomLLMProvider
 
 # Generators
@@ -23,31 +23,45 @@ def main():
     parser = argparse.ArgumentParser(description="InfiniteWeb Framework Reproduction (Full 17-Prompt Flow)")
     parser.add_argument("--seed", type=str, default="online_bookstore", help="Website seed")
     parser.add_argument("--output", type=str, default="output", help="Directory to save generated files")
-    parser.add_argument("--vllm-url", type=str, default="http://10.166.69.135:8000/v1", help="vLLM API Base URL")
+    parser.add_argument("--vllm-url", type=str, default=None, help="Single vLLM URL (fallback when --gen-url/--plan-url not set)")
+    parser.add_argument("--gen-url", type=str, default=None, help="vLLM URL for frontend/backend code generation")
+    parser.add_argument("--plan-url", type=str, default=None, help="vLLM URL for planning, fixing, and other tasks")
     
     args = parser.parse_args()
+
+    # Resolve endpoints
+    default_url = args.vllm_url or "http://10.166.69.135:8000/v1"
+    gen_url = args.gen_url or default_url
+    plan_url = args.plan_url or default_url
     
     print(f"🚀 Initializing InfiniteWeb Generator for '{args.seed}'...")
-    print(f"🔌 Connecting to LLM at {args.vllm_url}...")
+    print(f"🔌 Generation LLM:  {gen_url}")
+    print(f"🔌 Planning LLM:    {plan_url}")
     
-    # Initialize LLM
+    # Initialize LLM providers
     try:
-        llm = CustomLLMProvider(base_url=args.vllm_url)
+        gen_llm = CustomLLMProvider(base_url=gen_url)
+        if gen_url == plan_url:
+            plan_llm = gen_llm  # reuse same client if same endpoint
+        else:
+            plan_llm = CustomLLMProvider(base_url=plan_url)
     except Exception as e:
         print(f"Error connecting to LLM: {e}")
         return
 
     # Initialize Generators
+    # gen_llm  → frontend/backend code generation (e.g. Qwen32B on 172.16.152.159)
+    # plan_llm → planning, fixing, and everything else (e.g. DeepSeek-V3.1 on 10.166.97.108)
     print("🛠  Initializing Generators...")
-    task_gen = LLMTaskGenerator(llm)
-    interface_designer = LLMInterfaceDesigner(llm)
-    arch_designer = LLMArchitectDesigner(llm)
-    data_gen = LLMDataGenerator(llm)
-    backend_gen = LLMBackendGenerator(llm)
-    page_designer = LLMPageDesigner(llm)
-    frontend_gen = LLMFrontendGenerator(llm)
-    instr_gen = LLMInstrumentationGenerator(llm)
-    evaluator_gen = LLMEvaluatorGenerator(llm)
+    task_gen = LLMTaskGenerator(plan_llm)
+    interface_designer = LLMInterfaceDesigner(plan_llm)
+    arch_designer = LLMArchitectDesigner(plan_llm)
+    data_gen = LLMDataGenerator(plan_llm)
+    backend_gen = LLMBackendGenerator(gen_llm)
+    page_designer = LLMPageDesigner(plan_llm)
+    frontend_gen = LLMFrontendGenerator(gen_llm)
+    instr_gen = LLMInstrumentationGenerator(plan_llm)
+    evaluator_gen = LLMEvaluatorGenerator(plan_llm)
     
     # Setup Pipeline
     pipeline = WebGenPipeline(

@@ -6,7 +6,7 @@ Generates evaluator logic using PROMPT_INSTRUMENTATION_EVALUATOR.
 import json
 from ..interfaces import IEvaluatorGenerator, ILLMProvider
 from ..prompts.library import PROMPT_INSTRUMENTATION_EVALUATOR
-from ..utils import clean_json_response
+from ..utils import clean_json_response, with_retry
 
 class LLMEvaluatorGenerator(IEvaluatorGenerator):
     """Generates evaluators using LLM."""
@@ -14,6 +14,7 @@ class LLMEvaluatorGenerator(IEvaluatorGenerator):
     def __init__(self, llm: ILLMProvider):
         self.llm = llm
         
+    @with_retry(max_retries=3)
     def generate(self, spec, instr_spec, logic_code: str) -> str:
         """Generate evaluator script."""
         tasks_json = json.dumps([
@@ -52,7 +53,7 @@ class LLMEvaluatorGenerator(IEvaluatorGenerator):
         # Convert list of evaluator definitions to a JS script
         js_code = "class Evaluator {\n"
         js_code += "  constructor() { this.results = {}; }\n"
-        js_code += "  async evaluate() {\n"
+        js_code += "  async evaluate(taskId) {\n"
         
         for ev in evals:
             task_id = ev.get("task_id")
@@ -60,6 +61,9 @@ class LLMEvaluatorGenerator(IEvaluatorGenerator):
             js_code += f"    // Evaluator for {task_id}\n"
             js_code += f"    try {{ this.results['{task_id}'] = (() => {{ {logic} }})(); }} catch(e) {{ console.error(e); }}\n"
         
+        js_code += "\n    if (taskId) {\n"
+        js_code += "        return { passed: !!this.results[taskId] };\n"
+        js_code += "    }\n"
         js_code += "    return this.results;\n"
         js_code += "  }\n}\n"
         return js_code

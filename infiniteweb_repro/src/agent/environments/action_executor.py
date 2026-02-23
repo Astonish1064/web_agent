@@ -59,7 +59,11 @@ class ActionExecutor:
         return False
 
     def _get_locator(self, page: Page, target: str):
-        """Attempts to resolve a semantic target to a Playwright Locator."""
+        """Attempts to resolve a target (Semantic or ID) to a Playwright Locator."""
+        # Strategy 0: Check for Agent ID (Integers)
+        if str(target).isdigit():
+             return page.locator(f'[data-agent-id="{target}"]')
+
         import re
         # Pattern: [role] 'name'
         match = re.match(r"\[(\w+)\]\s*'([^']*)'", target)

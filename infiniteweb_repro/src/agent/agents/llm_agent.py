@@ -1,4 +1,5 @@
 import json
+import asyncio
 import logging
 from typing import List, Optional
 from ..interfaces import IWebAgent
@@ -24,7 +25,18 @@ class LLMWebAgent(IWebAgent):
         """Determines the next action using the LLM."""
         
         # 1. Prepare history string
-        history_str = "\n".join([f"- {a.type}({a.target or ''}, {a.value or ''})" for a in history[-5:]])
+        history_lines = []
+        for i, a in enumerate(history[-5:]):
+            line = f"- {a.type}({a.target or ''}, {a.value or ''})"
+            # If this is the LAST action and the observation says it failed, mark it.
+            # Note: history items are ordered. The last item in history corresponds to the action just taken.
+            # We assume 'observation' reflects the state AFTER history[-1].
+            if i == len(history[-5:]) - 1:
+                # Check success of the *previous* action (which is this one)
+                if hasattr(observation, 'last_action_success') and not observation.last_action_success:
+                     line += " (FAILED)"
+            history_lines.append(line)
+        history_str = "\n".join(history_lines)
         
         # 2. Prepare instrumentation info
         instr_info = "HIDDEN (Simulating human-level perception)"
@@ -46,9 +58,11 @@ class LLMWebAgent(IWebAgent):
             history=history_str or "No actions yet"
         )
         
-        # 3. Call LLM
+        # 3. Call LLM (offload sync call to thread pool to avoid blocking event loop)
         try:
-            response = self.llm.prompt_json(user_prompt, system_prompt=AGENT_SYSTEM_PROMPT)
+            response = await asyncio.to_thread(
+                self.llm.prompt_json, user_prompt, AGENT_SYSTEM_PROMPT
+            )
             
             if not response or 'action' not in response:
                 logger.error(f"LLM returned invalid action format: {response}")
@@ -59,7 +73,7 @@ class LLMWebAgent(IWebAgent):
                 type=action_data.get('type', 'wait'),
                 target=action_data.get('target'),
                 value=str(action_data.get('value', '')),
-                reasoning=response.get('reasoning')
+                reasoning=response.get('thought')  # Map 'thought' (Reflexion) to reasoning
             )
             
         except Exception as e:

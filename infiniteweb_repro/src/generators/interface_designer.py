@@ -12,14 +12,8 @@ from ..prompts.library import PROMPT_INTERFACE_DESIGN, PROMPT_INTERFACE_WRAPPING
 from ..utils import clean_json_response, with_retry
 from ..validation import SchemaValidator
 
-@dataclass
-class InterfaceDef:
-    """An interface definition."""
-    name: str
-    description: str
-    parameters: List[Dict]
-    returns: Dict
-    related_tasks: List[str]
+from ..domain import InterfaceDef
+
 
 @dataclass
 class HelperFunction:

@@ -9,7 +9,7 @@ from typing import List, Dict
 
 from ..interfaces import IPageDesigner, ILLMProvider
 from ..prompts.library import PROMPT_PAGE_FUNCTIONALITY, PROMPT_DESIGN_ANALYSIS, PROMPT_LAYOUT_DESIGN
-from ..utils import clean_json_response
+from ..utils import clean_json_response, with_retry
 
 
 @dataclass
@@ -55,6 +55,7 @@ class LLMPageDesigner(IPageDesigner):
     def __init__(self, llm: ILLMProvider):
         self.llm = llm
     
+    @with_retry(max_retries=3)
     def design_functionality(self, page_spec, spec, navigation_info=None) -> PageDesign:
         """Design page functionality and components."""
         page_spec_json = json.dumps({
@@ -94,6 +95,7 @@ class LLMPageDesigner(IPageDesigner):
             components=data.get("components", [])
         )
     
+    @with_retry(max_retries=3)
     def analyze_design(self, seed: str) -> DesignAnalysis:
         """Analyze design to extract visual characteristics."""
         prompt = PROMPT_DESIGN_ANALYSIS.format(website_seed=seed)
@@ -116,6 +118,7 @@ class LLMPageDesigner(IPageDesigner):
             spacing_system=data.get("spacing_system", {})
         )
     
+    @with_retry(max_retries=3)
     def design_layout(self, page_spec, design_analysis, components: list, seed: str) -> Layout:
         """Design layout for page components."""
         visual_style = getattr(design_analysis, 'visual_features', {}).get('overall_style', 'modern')

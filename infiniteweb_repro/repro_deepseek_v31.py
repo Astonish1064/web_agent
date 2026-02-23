@@ -22,14 +22,14 @@ from src.async_pipeline import AsyncWebGenPipeline
 
 async def main():
     topic = sys.argv[1] if len(sys.argv) > 1 else "gaming_pc_configurator"
-    output_dir = sys.argv[2] if len(sys.argv) > 2 else "output/deepseek_v31_system_test"
+    output_dir = sys.argv[2] if len(sys.argv) > 2 else "output/deepseek_v31_90_27_fixed"
     
     print(f"🚀 Starting Website Generation for: {topic} using DeepSeek-V3.1")
     
-    # Initialize LLM with DeepSeek-V3.1 endpoint
+    # Initialize LLM with DeepSeek-V3.1 endpoint (Verified)
     llm = CustomLLMProvider(
-        base_url="http://10.166.90.27:8000/v1",
-        model="/volume/pt-train/models/DeepSeek-V3.1"
+        base_url="https://console.siflow.cn/siflow/zhuoguang/skyinfer/yxing/dpskv32-tp8dp1-h20-service/v1",
+        model="DeepSeek-V3.2"
     )
     
     # Initialize Generators

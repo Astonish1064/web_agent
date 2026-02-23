@@ -38,6 +38,9 @@ class PlaywrightEnvironment(IAgentEnvironment, ISnapshotable):
         self.browser = await self.pw.chromium.launch(headless=self.headless)
         self.context = await self.browser.new_context(viewport=self.viewport)
         self.page = await self.context.new_page()
+        # Debugging: Log console output
+        self.page.on("console", lambda msg: print(f"console: {msg.text}"))
+        self.page.on("pageerror", lambda err: print(f"pageerror: {err}"))
 
     async def stop(self):
         """Clean up resources."""
@@ -105,10 +108,57 @@ class PlaywrightEnvironment(IAgentEnvironment, ISnapshotable):
         
         # Capture A11y tree via CDP
         try:
+            # 1. Inject IDs directly into AX properties (aria-label) so they survive the CDP trip
+            await self.page.evaluate("""() => {
+                window.__agent_ids__ = {}; // Store original labels to revert later if needed
+                
+                let idCounter = 1;
+                document.querySelectorAll('*').forEach(el => {
+                    // Check interactivity
+                    const style = window.getComputedStyle(el);
+                    const tag = el.tagName.toLowerCase();
+                    const isInteractive = 
+                        ['button', 'a', 'input', 'select', 'textarea'].includes(tag) ||
+                        el.hasAttribute('onclick') || 
+                        el.onclick ||
+                        style.cursor === 'pointer' ||
+                        ['button', 'link', 'textbox', 'checkbox', 'radio'].includes(el.getAttribute('role'));
+                        
+                    if (isInteractive) {
+                        const aid = idCounter++;
+                        
+                        // Priority for name: aria-label > placeholder > innerText > alt > title
+                        let originalLabel = 
+                            el.getAttribute('aria-label') || 
+                            el.getAttribute('placeholder') || 
+                            el.innerText || 
+                            el.getAttribute('alt') || 
+                            el.getAttribute('title') || 
+                            '';
+                        
+                        // Clean up newlines and extra spaces
+                        originalLabel = originalLabel.replace(/\s+/g, ' ').trim();
+                        
+                        el.setAttribute('aria-label', `${originalLabel} --agent-id:${aid}--`);
+                        el.setAttribute('data-agent-id', aid.toString());
+                    }
+                });
+            }""")
+
+            # 2. Capture AXTree (now enriched with IDs)
             client = await self.page.context.new_cdp_session(self.page)
             await client.send("Accessibility.enable")
             cdp_snapshot = await client.send("Accessibility.getFullAXTree")
+            
+            # 3. Process
             a11y_tree = self.a11y_processor.process(cdp_snapshot)
+            
+            # 4. Cleanup (Optional, removed to save time/tokens, and it might help visual debugging)
+            # await self.page.evaluate("...")
+            
+        except Exception as e:
+            logger.warning(f"Failed to capture A11y tree via CDP: {e}")
+            a11y_tree = "Error: Could not capture A11y tree."
         except Exception as e:
             logger.warning(f"Failed to capture A11y tree via CDP: {e}")
             a11y_tree = "Error: Could not capture A11y tree."

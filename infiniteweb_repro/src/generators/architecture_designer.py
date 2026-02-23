@@ -26,6 +26,16 @@ class PageArchitecture:
     def from_dict(d):
         return PageArchitecture(**d)
 
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "filename": self.filename,
+            "assigned_interfaces": self.assigned_interfaces,
+            "incoming_params": self.incoming_params,
+            "outgoing_connections": self.outgoing_connections,
+            "access_methods": self.access_methods
+        }
+
 
 @dataclass
 class Architecture:
@@ -43,6 +53,14 @@ class Architecture:
             header_links=d.get('header_links', []),
             footer_links=d.get('footer_links', [])
         )
+    
+    def to_dict(self):
+        return {
+            "all_pages": self.all_pages,
+            "pages": [p.to_dict() for p in self.pages],
+            "header_links": self.header_links,
+            "footer_links": self.footer_links
+        }
 
 
 class LLMArchitectDesigner(IArchitectDesigner):

@@ -157,13 +157,14 @@ IMPORTANT:
 • System state is managed automatically through localStorage
 
 Design Requirements:
-1. Use EXACTLY the pages from primary architecture - do not add or remove pages
-2. Assign appropriate interfaces to each page based on functionality
-3. Use URL parameters for navigation (NOT localStorage for page data)
-4. Define incoming parameters (what parameters the page accepts)
-5. Define outgoing connections (what pages this page navigates to)
-6. Specify access methods for each page
-7. Design header and footer navigation links
+1. Use EXACTLY the pages from primary architecture - do not add or remove pages.
+2. CONSOLIDATION RULE: If the website type benefits from filtering and sorting (like e-commerce, catalogs), prefer a unified 'search.html' or 'explore.html' for all browsing/category views to ensure UI consistency. Avoid separate 'category.html' if it would lack the filters present in search.
+3. Assign appropriate interfaces to each page based on functionality.
+4. Use URL parameters for navigation (NOT localStorage for page data).
+5. Define incoming parameters (what parameters the page accepts).
+6. Define outgoing connections (what pages this page navigates to).
+7. Specify access methods for each page.
+8. Design header and footer navigation links.
 
 Access Method Guidelines:
 • "navigation": Accessible through header/footer navigation
@@ -346,20 +347,29 @@ Navigation Information: {page_architecture_json}
 Framework HTML Reference (DO NOT RE-GENERATE HEADER/FOOTER): {framework_html}
 Data Dictionary: {data_dict_json}
 Page-Specific SDK Interfaces: {page_interfaces_json}
+Logic Code Implementation (logic.js):
+```javascript
+{logic_code}
+```
 
 REQUIREMENTS:
 1. Generate the content that will go inside the <main id="content"> section.
 2. CRITICAL: Implement ALL "outgoing_connections" as visible UI elements (e.g., <button>, <a href="...">, or clickable cards). 
 3. If the architecture says this page connects to "add-task.html", you MUST provide a button or link to that page.
-4. Call interfaces as WebsiteSDK.functionName() - they are SYNCHRONOUS.
+4. Call interfaces as WebsiteSDK.functionName() - INSPECT logic.js for exact parameters (e.g., positional arguments vs objects).
 5. Handle incoming_params: Extract URL parameters this page expects.
 6. Add data attributes: data-populate, data-action, data-component.
 
 UI JAVASCRIPT REQUIREMENTS:
 1. Initialize page when DOM is ready.
-2. Extract URL parameters for incoming_params.
 3. Implement navigation logic for outgoing_connections - use window.location.href for page transitions.
 4. Set up event listeners based on data-action attributes.
+
+ANTI-MOCKING & QUALITY REQUIREMENTS:
+1. MANDATORY: The UI must invoke WebsiteSDK methods correctly. INSPECT logic.js for exact function names.
+2. PROHIBITED: Do NOT define any internal 'mockDB', 'localData', or placeholder functions for logic.
+3. PROHIBITED: Do NOT use Chinese characters or 'To', 'Wait', '极' as placeholders in code or UI labels.
+4. If an interface you need is missing, DO NOT mock it; instead, simplify the UI component to not require it.
 
 CRITICAL: 
 - Use only relative .html URLs for internal navigation.
@@ -368,7 +378,23 @@ CRITICAL:
 - DO NOT assume any getters, summaries, or other methods exist if they are not explicitly listed.
 - If a method you need (like a summary) is missing, simplify the UI or display placeholders rather than creating hypothetical calls.
 
-Return: {{"html_content": "The HTML content for the main section, including UI scripts"}}
+Return: {{ "html_content": "The HTML content for the main section, including UI scripts" }}
+
+### HTML GOLD STANDARDS (MANDATORY):
+1. **Semantic Structure**: Use <header>, <nav>, <main>, <article>, <footer> appropriately.
+2. **Explicit IDs**: ALL interactive elements (buttons, inputs, forms) MUST have a descriptive, unique `id` attribute (e.g., id="btn-submit-order").
+3. **Clean Integration**:
+   - Do NOT define inline Javascript functions (e.g., `onclick="..."`).
+   - Page-Specific UI Logic (listeners) MUST be inside `document.addEventListener('DOMContentLoaded', ...)` at the bottom of `<body>`.
+   - Business Logic MUST delegate to `window.WebsiteSDK`.
+
+4. **Testability & Selectability**:
+   - MANDATORY: All interactive elements must have a unique `id`.
+   - RECOMMENDED: Use `data-action="description"` or `data-testid="..."` for complex components to aid testing.
+
+5. **Resource Paths**:
+   - Link CSS as `<link rel="stylesheet" href="styles.css">`.
+   - Link JS as `<script src="logic.js" defer></script>` (if generating full page).
 """
 
 # Figure 24: CSS Page Generation
@@ -444,17 +470,28 @@ Data Models: {data_models_json}
 Interfaces: {interfaces_json}
 
 REQUIREMENTS:
-1. Implement ALL core interfaces specified
-2. Add helper functions as needed (prefix with _ for private)
-3. Use localStorage for ALL data persistence (browser-compatible)
-4. NO DOM operations, NO window/document references (except localStorage)
-5. Must work in both browser and Node.js environments
-6. All data must be JSON serializable for localStorage
-7. Implement interfaces with positional arguments only
-8. CRITICAL: If you are not returning a JSON object, return ONLY raw JavaScript code. DO NOT wrap it in markdown block fences like ```javascript.
+1. Implement ALL core interfaces specified.
+2. Add helper functions as needed (prefix with _ for private).
+3. Use localStorage for ALL data persistence (browser-compatible).
+4. NO DOM operations, NO window/document references (except for attaching the SDK).
+5. **CRITICAL: EXPORT FOR BROWSER**: Wrap all implemented interfaces in a global object named `WebsiteSDK` and attach it to the `window` object if `typeof window !== 'undefined'`. 
+   Example: `window.WebsiteSDK = {{ ...your implementations... }};`
+6. Also include `if (typeof module !== 'undefined') {{ module.exports = BusinessLogic; }}` (Note: export the Class, not the instance) for Node.js testing compatibility.
+7. All data must be JSON serializable for localStorage.
+8. Implement interfaces with positional arguments only.
+9. **STRICT RETURN TYPES**: You MUST return EXACTLY the object structure defined in the 'Interfaces' JSON.
+    - Use the EXACT property names (keys) specified in the 'returns' section of each interface.
+    - If the interface return schema has a wrapper (e.g., `{{ "success": boolean, "someKey": ... }}`), you MUST include that wrapper.
+    - DO NOT simplify, unwrap, or rename keys.
+    - Example: If an interface defines a return object with keys `A` and `B`, your return statement must be `return {{ A: ..., B: ... }};`.
+10. If you are not returning a JSON object, return ONLY raw JavaScript code. DO NOT wrap it in markdown block fences like ```javascript.
+11. **DATA INITIALIZATION**: You MUST implement a `_initData()` method called in the constructor.
+    - It must check if `localStorage` is empty (e.g., `!localStorage.getItem('your_main_key')`).
+    - If empty, it MUST populate `localStorage` with the provided `Data Models` (seed data).
+    - **CRITICAL**: You must HARDCODE the seed data from `data_models_json` into this method so the app can self-seed without external test injection. This ensures the app works on cold start.
 
 Return JSON format:
-{{"code": "Complete business_logic.js code string"}}
+{{"code": "javascript code here"}}
 OR return ONLY the raw JavaScript code directly without any formatting.
 
 STRUCTURE:
@@ -464,12 +501,15 @@ constructor() {{ this._initStorage(); }}
 _initStorage() {{ /* init localStorage tables */ }}
 _getFromStorage(key) {{ /* retrieve data */ }}
 _saveToStorage(key, data) {{ /* persist data */ }}
+// Implement ALL interfaces here with EXACT names
 addToCart(productId, quantity) {{ /* implementation */ }}
 }}
 if (typeof window !== 'undefined') {{
   window.WebsiteSDK = new BusinessLogic();
 }}
-module.exports = BusinessLogic;
+if (typeof module !== 'undefined') {{
+  module.exports = BusinessLogic;
+}}
 
 Return: {{"code": "javascript code here"}}
 """
@@ -486,14 +526,30 @@ Current Code:
 Test Errors:
 {error_log}
 
-REQUIREMENTS:
-1. Analyze the test errors to correctly identify the bugs in the logic.
-2. Fix the bugs in the code.
-3. MAINTAIN the existing structure and class names.
-4. DO NOT change function signatures unless necessary to fix the bug.
-5. **CRITICAL**: If the error is `ReferenceError: localStorage is not defined`, you must add a polyfill at the top of the file:
+### DECISION MATRIX
+Analyze the error and select the single best action:
+
+| Root Cause | Action | Reasoning Example |
+| :--- | :--- | :--- |
+| **Test Bug** | `FIX_TEST` | Tests reference variable `foo` but logic correctly uses `bar`. Error is `ReferenceError: foo is not defined` in test file. |
+| **Logic Bug** | `FIX_LOGIC` | Logic returns `null` but requirements say it should return object. Logic has syntax error. Logic function is missing. |
+| **Contract Drift** | `FIX_LOGIC` | Error contains `CONTRACT_VIOLATION`. This means your return object keys don't match the Interface. |
+| **Hallucination** | `FIX_LOGIC` | Logic contains "placeholder" or Chinese characters like "Wait..." or "TODO" or "极". |
+| **Character Corruption** | `FIX_LOGIC` | Logic contains non-ASCII characters where code is expected (e.g. 'category极' instead of 'category:'). |
+| **Ambiguous** | `FIX_TEST` | If unsure, prefer fixing tests to match logic, UNLESS logic is clearly broken (syntax/crash). |
+| **Fatal** | `FATAL` | Error is unrelated to code (e.g. disk full, network timeout). |
+
+### REQUIREMENTS
+1. **Critical:** If the error log contains `CONTRACT_VIOLATION`, you MUST search for the expected keys in the Interface Specs and ensure your `return` statements provide those exact keys.
+2. **Critical:** Check for "Character Corruption" (e.g., '极', 'Wait...') in the Logic Code. If found, ACTION is ALWAYS `FIX_LOGIC`.
+3. Analyze the test errors to correctly identify the bugs in the logic.
+4. Fix the bugs in the code.
+5. MAINTAIN the existing structure and class names.
+6. DO NOT change function signatures unless necessary to fix the bug.
+7. **CRITICAL**: If the error is `ReferenceError: localStorage is not defined`, you must add a polyfill at the top of the file:
    `if (typeof localStorage === "undefined") {{ global.localStorage = {{ getItem: () => null, setItem: () => {{}}, clear: () => {{}}, removeItem: () => {{}} }}; }}`
-6. Return ONLY the fixed code.
+8. **ANTI-CORRUPTION**: Do NOT output any non-ASCII characters (like Chinese '极', 'To', 'Wait') in the code. Ensure all syntax (colons, braces) is standard ASCII.
+9. Return ONLY the fixed code.
 
 Return JSON format:
 {{"code": "Complete fixed business_logic.js code string"}}
@@ -571,15 +627,21 @@ Logic Code (logic.js):
 ### CORRECT System Test Example (JSDOM):
 ```javascript
 // Setup JSDOM
-const dom = new JSDOM(htmlContent, {{ runScripts: "dangerously" }});
+const virtualConsole = new jsdom.VirtualConsole();
+virtualConsole.on("error", () => {{ ... }}); // Suppress CSS loading errors
+const dom = new JSDOM(htmlContent, {{ 
+    runScripts: "dangerously", 
+    resources: "usable", // Load scripts but we suppress CSS errors
+    virtualConsole 
+}});
 const document = dom.window.document;
 
 // 1. Locate Element
 const btn = document.querySelector('.btn-primary');
 // 2. Validate Accessibility (The step that would have saved your Agent)
-if (btn.tagName !== 'BUTTON' && btn.tagName !== 'A') {{
+if (btn.tagName !== 'BUTTON' && btn.tagName !== 'A') {{{{
     assert(btn.getAttribute('role') === 'button', 'Clickable div must have role="button" for Agents');
-}}
+}}}}
 // 3. Simulate Interaction
 btn.click();
 // 4. Verify Side Effect
@@ -750,3 +812,108 @@ Return a JSON object:
     "visual_bugs": ["bug 1", "bug 2"]
 }}
 """
+
+# Figure 32: Smart Error Analysis (Diagnostic)
+PROMPT_ERROR_ANALYSIS = """
+You are a Senior Software Architect diagnosing a CI/CD failure.
+Analyze the provided Error Log, Business Logic, and Test Code to determine the ROOT CAUSE and the CORRECT ACTION.
+
+### CONTEXT
+Website Seed: {website_seed}
+Original Tasks: {tasks_json}
+
+### ARTIFACTS
+1. **Business Logic (logic.js)**:
+```javascript
+{logic_code}
+```
+2. **Current Tests (backend_tests.js)**:
+```javascript
+{test_code}
+```
+3. **Error Log**:
+{error_log}
+
+### DECISION MATRIX
+Analyze the error and select the single best action:
+
+| Root Cause | Action | Reasoning Example |
+| :--- | :--- | :--- |
+| **Test Bug** | `FIX_TEST` | Tests reference variable `foo` but logic correctly uses `bar`. Error is `ReferenceError: foo is not defined` in test file. |
+| **Logic Bug** | `FIX_LOGIC` | Logic returns `null` but requirements say it should return object. Logic has syntax error. Logic function is missing. |
+| **Hallucination** | `FIX_LOGIC` | Logic contains "placeholder" or Chinese characters like "Wait..." or "TODO" or "极". |
+| **Character Corruption** | `FIX_LOGIC` | Logic contains non-ASCII characters where code is expected (e.g. 'category极' instead of 'category:'). |
+| **Ambiguous** | `FIX_TEST` | If unsure, prefer fixing tests to match logic, UNLESS logic is clearly broken (syntax/crash). |
+| **Fatal** | `FATAL` | Error is unrelated to code (e.g. disk full, network timeout). |
+
+### REQUIREMENTS
+1. Be extremely careful about "Hallucination" (e.g. `ReferenceError: localStorage is not defined` inside Logic). This is often a LOGIC fix (needs polyfill).
+2. If `logic.js` has `SyntaxError`, it is ALWAYS `FIX_LOGIC`.
+3. If `backend_tests.js` has `SyntaxError`, it is ALWAYS `FIX_TEST`.
+
+### RESPONSE FORMAT
+Return JSON:
+{{
+  "root_cause": "Brief explanation of the bug",
+  "action": "FIX_LOGIC" | "FIX_TEST" | "FATAL",
+  "confidence": 0-10,
+  "reasoning": "Why you chose this action..."
+}}
+"""
+
+# =============================================================================
+# 10. TASK FLOW VERIFICATION (GOLDEN PATH)
+# =============================================================================
+
+PROMPT_GOLDEN_PATH_GENERATION = """
+You are a Senior Automation Engineer. Your goal is to generate a "Golden Path" action sequence that completes a specific task on a website.
+This sequence will be executed to verify that the generated HTML and Backend SDK are correctly integrated and functionally complete.
+
+### Inputs:
+- **Task**: {task_description}
+- **High-Level Steps**: {task_steps}
+- **Architecture**: {architecture_json}
+- **Target Page HTML**: {html_content}
+- **Website SDK (logic.js)**: {logic_code}
+- **Valid Action Space**: {valid_selectors}
+
+### Requirements:
+1.  **Complete Path**: Generate the FULL sequence of actions to complete the task, including navigation to other pages if needed.
+2.  **Explicit Selectors (Current Page)**: For actions on the current page ({html_content} context), you MUST ONLY use selectors listed in the **Valid Action Space**.
+3.  **Inferred Selectors (Next Pages)**: If the task requires navigating to a new page (e.g., product details), you must INFER the selector for components on that page based on the High-Level Steps and standard conventions (e.g., `#add-to-cart-btn` for "Add to Cart", `#checkout-btn` for "Checkout").
+4.  **Strict Grounding**: If the element you want to click is NOT in the Valid Action Space but is clearly on the current page, find the closest semantic parent that IS in the list.
+5.  **Action Types**: Only use `click`, `type`, and `select`.
+6.  **Consistency**: Ensure the values you `type` match the requirements of the SDK functions.
+
+### Response Format:
+Return a JSON object:
+{{
+    "task_id": "{task_id}",
+    "steps": [
+        {{
+            "action": "click",
+            "selector": "#start-wizard",
+            "description": "Click the start button"
+        }},
+        {{
+            "action": "type",
+            "selector": "input[type='search']",
+            "value": "Core i9",
+            "description": "Search for a specific CPU"
+        }},
+        {{
+            "action": "click",
+            "selector": ".component-item[data-id='cpu-1']",
+            "description": "Select the CPU from results"
+        }},
+        {{
+            "action": "click",
+            "selector": "#add-to-cart-btn",
+            "description": "Add to cart (on product page)"
+        }}
+    ]
+}}
+
+Respond ONLY with valid JSON.
+"""
+

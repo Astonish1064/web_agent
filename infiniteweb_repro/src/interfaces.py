@@ -151,7 +151,7 @@ class IFrontendGenerator(ABC):
         pass
         
     @abstractmethod
-    def generate_html(self, spec, page_spec, page_design, page_arch, framework) -> str:
+    def generate_html(self, spec, page_spec, page_design, page_arch, framework, logic_code: str) -> str:
         """Generate page HTML."""
         pass
         
@@ -163,6 +163,27 @@ class IFrontendGenerator(ABC):
     @abstractmethod
     def generate_page(self, spec: WebsiteSpec, page_spec: PageSpec, logic_code: str) -> str:
         """Legacy compatibility method."""
+        pass
+
+    @abstractmethod
+    def implement_task_view(self, task, spec, registry=None) -> dict:
+        """[INCREMENTAL TCTDD] Generate or update HTML/CSS for a specific task."""
+        pass
+
+    @abstractmethod
+    def fix_task_view(self, task, spec, error, current_pages, registry=None) -> dict:
+        """[INCREMENTAL TCTDD] Fixes the UI based on verification errors."""
+        pass
+
+class IControllerGenerator(ABC):
+    @abstractmethod
+    def generate_controller(self, task, html_pages: dict, logic_code: str, spec, registry=None) -> str:
+        """[INCREMENTAL TCTDD] Generate app.js to bind UI to logic for a specific task."""
+        pass
+
+    @abstractmethod
+    def fix_controller(self, task, html_pages: dict, current_controller: str, logic_code: str, spec, error, registry=None) -> str:
+        """[INCREMENTAL TCTDD] Fixes app.js based on Agent verification errors/trajectories."""
         pass
 
 class IInstrumentationGenerator(ABC):

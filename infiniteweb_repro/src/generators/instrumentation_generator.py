@@ -10,7 +10,7 @@ from typing import List, Dict
 from ..interfaces import IInstrumentationGenerator, ILLMProvider
 from ..prompts.library import PROMPT_INSTRUMENTATION_ANALYSIS, PROMPT_INSTRUMENTATION_CODE
 from ..domain import InstrumentationSpec
-from ..utils import clean_json_response, clean_code_response
+from ..utils import clean_json_response, clean_code_response, with_retry
 
 @dataclass
 class InstrumentationRequirements:
@@ -24,6 +24,7 @@ class LLMInstrumentationGenerator(IInstrumentationGenerator):
     def __init__(self, llm: ILLMProvider):
         self.llm = llm
         
+    @with_retry(max_retries=3)
     def analyze(self, spec, logic_code: str) -> InstrumentationRequirements:
         """Analyze logic to determine instrumentation needs."""
         # Convert tasks to simple list for prompt
@@ -46,6 +47,7 @@ class LLMInstrumentationGenerator(IInstrumentationGenerator):
             return InstrumentationRequirements()
         return InstrumentationRequirements(requirements=data.get("requirements", []))
             
+    @with_retry(max_retries=3)
     def inject(self, logic_code: str, instr_spec) -> str:
         """Inject instrumentation code."""
         reqs = getattr(instr_spec, 'requirements', [])
